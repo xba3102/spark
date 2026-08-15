@@ -1653,7 +1653,7 @@
                                         <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Pilih Acara Kejohanan</label>
                                         <div className="flex gap-2 items-center">
                                             <select value={resultForm.eventId} onChange={e => setResultForm({...resultForm, eventId:e.target.value})} className="w-full border p-2.5 rounded-xl bg-slate-50 font-bold text-sm hover:bg-white transition focus:ring-2 focus:ring-indigo-500">
-                                                <option value="">-- Sila Pilih Acara Untuk Mengunci Keputusan --</option>
+                                                <option value="">{userRole === "pelawat" ? "-- Sila Pilih Acara Untuk Melihat Keputusan --" : "-- Sila Pilih Acara Untuk Mengunci Keputusan --"}</option>
                                                 {eventsWithCode.map(ev => <option key={ev.id} value={ev.id}>[{ev.kodAcara}] {ev.nama} Kategori {ev.kategori}</option>)}
                                             </select>
                                             {userRole !== "pelawat" && <button onClick={() => executeBypassPrint('semua_keputusan')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md whitespace-nowrap transition">🖨️ Cetak Semua Keputusan</button>}
@@ -1663,11 +1663,11 @@
 
                                 <div className="grid grid-cols-1 gap-6">
                                     <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-                                        <h3 className="font-bold border-b pb-2">🏅 Kunci Keputusan Pingat Secara Grid (Inline / Berpusat)</h3>
-                                        {userRole === "pelawat" ? <p className="text-xs text-red-500 italic font-semibold bg-red-50 p-3 rounded-xl border border-red-100">Ciri dikunci untuk Akaun Pelawat.</p> : (
-                                            !resultForm.eventId ? <p className="text-slate-400 italic bg-slate-50 p-6 rounded-xl text-center text-xs border border-dashed">Sila pilih acara dari dropdown di atas untuk menyenaraikan peserta dan mula mengunci keputusan.</p> :
+                                        <h3 className="font-bold border-b pb-2">🏅 {userRole === "pelawat" ? "Keputusan Acara Secara Grid" : "Kunci Keputusan Pingat Secara Grid (Inline / Berpusat)"}</h3>
+                                        {!resultForm.eventId ? <p className="text-slate-400 italic bg-slate-50 p-6 rounded-xl text-center text-xs border border-dashed">Sila pilih acara dari dropdown di atas untuk menyenaraikan peserta dan {userRole === "pelawat" ? "melihat" : "mula mengunci"} keputusan.</p> :
                                             <form onSubmit={async (e) => {
                                                 e.preventDefault();
+                                                if (userRole === "pelawat") return;
                                                 const toDelete = results.filter(r => r.eventId === resultForm.eventId);
                                                 
                                                 if (isCloudActive && db) {
@@ -1735,16 +1735,29 @@
                                                                             <span className="text-[10px] text-slate-500 uppercase">Rumah {ent.houseDisplay}</span>
                                                                         </td>
                                                                         <td className="p-3">
-                                                                            <select value={gridResults[ent.id]?.kedudukan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { catatan: "" }), kedudukan: e.target.value }}))} className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition">
-                                                                                <option value="">-- Tiada --</option>
-                                                                                <option value="1">🥇 1 (Johan)</option>
-                                                                                <option value="2">🥈 2 (Naib Johan)</option>
-                                                                                <option value="3">🥉 3 (Ketiga)</option>
-                                                                                <option value="4">🏅 4 (Keempat)</option>
-                                                                            </select>
+                                                                            {userRole === "pelawat" ? (
+                                                                                <div className="font-bold text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                                                                    {gridResults[ent.id]?.kedudukan === "1" ? "🥇 1 (Johan)" :
+                                                                                     gridResults[ent.id]?.kedudukan === "2" ? "🥈 2 (Naib Johan)" :
+                                                                                     gridResults[ent.id]?.kedudukan === "3" ? "🥉 3 (Ketiga)" :
+                                                                                     gridResults[ent.id]?.kedudukan === "4" ? "🏅 4 (Keempat)" : "-- Tiada --"}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <select value={gridResults[ent.id]?.kedudukan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { catatan: "" }), kedudukan: e.target.value }}))} className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition">
+                                                                                    <option value="">-- Tiada --</option>
+                                                                                    <option value="1">🥇 1 (Johan)</option>
+                                                                                    <option value="2">🥈 2 (Naib Johan)</option>
+                                                                                    <option value="3">🥉 3 (Ketiga)</option>
+                                                                                    <option value="4">🏅 4 (Keempat)</option>
+                                                                                </select>
+                                                                            )}
                                                                         </td>
                                                                         <td className="p-3">
-                                                                            <input type="text" value={gridResults[ent.id]?.catatan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { kedudukan: "" }), catatan: e.target.value }}))} placeholder="Cth: 10.5s atau 4.2m" className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition" />
+                                                                            {userRole === "pelawat" ? (
+                                                                                <div className="font-bold text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-100">{gridResults[ent.id]?.catatan || "-"}</div>
+                                                                            ) : (
+                                                                                <input type="text" value={gridResults[ent.id]?.catatan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { kedudukan: "" }), catatan: e.target.value }}))} placeholder="Cth: 10.5s atau 4.2m" className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition" />
+                                                                            )}
                                                                         </td>
                                                                     </tr>
                                                                 ));
@@ -1752,9 +1765,11 @@
                                                         </tbody>
                                                     </table>
                                                 </div>
-                                                <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white py-3.5 rounded-xl transition shadow-md text-sm tracking-wide font-black">💾 SIMPAN SEMUA KEPUTUSAN (GRID)</button>
+                                                {userRole !== "pelawat" && (
+                                                    <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white py-3.5 rounded-xl transition shadow-md text-sm tracking-wide font-black">💾 SIMPAN SEMUA KEPUTUSAN (GRID)</button>
+                                                )}
                                             </form>
-                                        )}
+                                        }
                                     </div>
                                 </div>
                                 
