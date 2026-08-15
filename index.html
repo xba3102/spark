@@ -2109,8 +2109,20 @@
                                 <div className="flex gap-3 pt-2">
                                     <button onClick={() => setIsLoginModalOpen(false)} className="flex-1 bg-slate-200 hover:bg-slate-300 py-3 rounded-xl text-xs font-bold transition">Batal</button>
                                     <button onClick={() => {
-                                        if(passcodeInput.trim() === "ADMIN7608") { localStorage.setItem('sps_local_role','admin'); setUserRole('admin'); setIsLoginModalOpen(false); setPasscodeInput(""); showToastMessage("Berjaya Log Masuk Sebagai Pentadbir (Admin)"); }
-                                        else if(passcodeInput.trim() === "GURU7608") { localStorage.setItem('sps_local_role','guru'); setUserRole('guru'); setIsLoginModalOpen(false); setPasscodeInput(""); showToastMessage("Berjaya Log Masuk Sebagai Pengurus (Guru)"); }
+                                        if(passcodeInput.trim() === "ADMIN7608") { 
+                                            localStorage.setItem('sps_local_role','admin'); 
+                                            localStorage.setItem('sps_local_name','Pentadbir');
+                                            setCurrentUser({ displayName: 'Pentadbir', email: '' });
+                                            setUserRole('admin'); setIsLoginModalOpen(false); setPasscodeInput(""); 
+                                            showToastMessage("Berjaya Log Masuk Sebagai Pentadbir (Admin)"); 
+                                        }
+                                        else if(passcodeInput.trim() === "URUS7608") { 
+                                            localStorage.setItem('sps_local_role','urusetia'); 
+                                            localStorage.setItem('sps_local_name','Urusetia');
+                                            setCurrentUser({ displayName: 'Urusetia', email: '' });
+                                            setUserRole('urusetia'); setIsLoginModalOpen(false); setPasscodeInput(""); 
+                                            showToastMessage("Berjaya Log Masuk Sebagai Urusetia"); 
+                                        }
                                         else showToastMessage("Kod laluan tidak sah!","error");
                                     }} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-bold shadow-md transition">Log Masuk</button>
                                 </div>
