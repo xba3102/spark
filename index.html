@@ -215,6 +215,7 @@
 
             const [recordForm, setRecordForm] = useState({id:"", acara:"", kategori:categories[0]||"L12TKB", catatan:"", nama:"", tahun:activeYear});
             const [showRecordForm, setShowRecordForm] = useState(false);
+            const [printTop4Only, setPrintTop4Only] = useState(true);
 
             const [kokumManualText, setKokumManualText] = useState(() => localStorage.getItem('sps_kokum_manual') || `<b>1. Kehadiran Tetamu / Jemputan:</b><br><br><br><b>2. Kewangan & Perbelanjaan:</b><br><br><br><b>3. Kekuatan Program:</b><br><br><br><b>4. Isu / Cabaran & Cadangan Penambahbaikan:</b><br><br><br>`);
             const [currentPrintMode, setCurrentPrintMode] = useState("");
@@ -567,8 +568,14 @@
                 `;
 
                 if (mode === 'semua_keputusan') {
+                    const isTop4Only = targetData ? targetData.printTop4Only : true;
                     const eventTables = eventsWithCode.map(ev => {
-                        const evResults = results.filter(r => r.eventId === ev.id).sort((a,b) => parseInt(a.kedudukan) - parseInt(b.kedudukan));
+                        let evResults = results.filter(r => r.eventId === ev.id).sort((a,b) => parseInt(a.kedudukan) - parseInt(b.kedudukan));
+                        
+                        if (isTop4Only) {
+                            evResults = evResults.filter(r => parseInt(r.kedudukan) <= 4);
+                        }
+                        
                         if (evResults.length === 0) return '';
                         
                         const rows = evResults.map(res => {
@@ -605,7 +612,7 @@
                                     rumahPemenang = ath.rumah;
                                 }
                             }
-                            const medal = res.kedudukan === "1" ? "EMAS" : res.kedudukan === "2" ? "PERAK" : res.kedudukan === "3" ? "GANGSA" : "KE-4";
+                            const medal = res.kedudukan === "1" ? "EMAS" : res.kedudukan === "2" ? "PERAK" : res.kedudukan === "3" ? "GANGSA" : res.kedudukan === "4" ? "KE-4" : `KE-${res.kedudukan}`;
                             return `
                                 <tr>
                                     <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-weight: bold;">${res.kedudukan}</td>
@@ -1656,7 +1663,15 @@
                                                 <option value="">{userRole === "pelawat" ? "-- Sila Pilih Acara Untuk Melihat Keputusan --" : "-- Sila Pilih Acara Untuk Mengunci Keputusan --"}</option>
                                                 {eventsWithCode.map(ev => <option key={ev.id} value={ev.id}>[{ev.kodAcara}] {ev.nama} Kategori {ev.kategori}</option>)}
                                             </select>
-                                            {userRole !== "pelawat" && <button onClick={() => executeBypassPrint('semua_keputusan')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md whitespace-nowrap transition">🖨️ Cetak Semua Keputusan</button>}
+                                            {userRole !== "pelawat" && (
+                                                <div className="flex items-center gap-3 bg-indigo-50 px-3 py-2 rounded-xl border border-indigo-100">
+                                                    <label className="flex items-center gap-1.5 cursor-pointer text-[10px] font-bold text-indigo-800 whitespace-nowrap" title="Tandakan untuk cetak senarai penuh termasuk kedudukan ke-5 hingga ke-8">
+                                                        <input type="checkbox" checked={!printTop4Only} onChange={e => setPrintTop4Only(!e.target.checked)} className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer" />
+                                                        Papar Ked. 5-8
+                                                    </label>
+                                                    <button onClick={() => executeBypassPrint('semua_keputusan', { printTop4Only })} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-md whitespace-nowrap transition">🖨️ Cetak</button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1740,7 +1755,11 @@
                                                                                     {gridResults[ent.id]?.kedudukan === "1" ? "🥇 1 (Johan)" :
                                                                                      gridResults[ent.id]?.kedudukan === "2" ? "🥈 2 (Naib Johan)" :
                                                                                      gridResults[ent.id]?.kedudukan === "3" ? "🥉 3 (Ketiga)" :
-                                                                                     gridResults[ent.id]?.kedudukan === "4" ? "🏅 4 (Keempat)" : "-- Tiada --"}
+                                                                                     gridResults[ent.id]?.kedudukan === "4" ? "🏅 4 (Keempat)" :
+                                                                                     gridResults[ent.id]?.kedudukan === "5" ? "5 (Kelima)" :
+                                                                                     gridResults[ent.id]?.kedudukan === "6" ? "6 (Keenam)" :
+                                                                                     gridResults[ent.id]?.kedudukan === "7" ? "7 (Ketujuh)" :
+                                                                                     gridResults[ent.id]?.kedudukan === "8" ? "8 (Kelapan)" : "-- Tiada --"}
                                                                                 </div>
                                                                             ) : (
                                                                                 <select value={gridResults[ent.id]?.kedudukan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { catatan: "" }), kedudukan: e.target.value }}))} className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition">
@@ -1749,6 +1768,10 @@
                                                                                     <option value="2">🥈 2 (Naib Johan)</option>
                                                                                     <option value="3">🥉 3 (Ketiga)</option>
                                                                                     <option value="4">🏅 4 (Keempat)</option>
+                                                                                    <option value="5">5 (Kelima)</option>
+                                                                                    <option value="6">6 (Keenam)</option>
+                                                                                    <option value="7">7 (Ketujuh)</option>
+                                                                                    <option value="8">8 (Kelapan)</option>
                                                                                 </select>
                                                                             )}
                                                                         </td>
