@@ -541,7 +541,7 @@
             const uniqueEventDates = Array.from(new Set(events.map(e => e.tarikh).filter(Boolean))).sort();
 
             const generatePredictions = () => {
-                const nextYear = parseInt(activeYear) + 1;
+                const nextYear = (parseInt(activeYear) || new Date().getFullYear()) + 1;
                 
                 const getIsYear6 = (ath) => {
                     if(!ath) return false;
@@ -631,8 +631,7 @@
             const predictions = useMemo(() => {
                 if(activeTab === "ramalan" && userRole === "admin") return generatePredictions();
                 return null;
-            }, [activeTab, results, athletes, events, userRole]);
-
+            }, [activeTab, results, athletes, events, userRole, activeYear, housesMetadata, pointsConfig]);
 
             const handleBackup = () => {
                 if(!checkAuth()) return;
@@ -1454,8 +1453,8 @@
                 { id: "acara", label: "Pengurusan Acara", reqRoles: ["admin", "guru", "urusetia"] },
                 { id: "atlit", label: "Pengurusan Atlet", reqRoles: ["admin", "guru", "urusetia"] },
                 { id: "keputusan", label: "Keputusan Acara", reqRoles: ["admin", "guru", "urusetia", "pelawat"] },
-                { id: "pasca_sukan", label: "Pasca Sukan", reqRoles: ["admin", "guru", "urusetia"] },
-                { id: "ramalan", label: "Ramalan Hadapan", reqRoles: ["admin"] }
+                { id: "ramalan", label: "Ramalan Hadapan", reqRoles: ["admin"] },
+                { id: "pasca_sukan", label: "Pasca Sukan", reqRoles: ["admin", "guru", "urusetia"] }
             ].filter(tab => tab.reqRoles.includes(userRole));
 
             return (
