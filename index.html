@@ -1338,12 +1338,105 @@
                 setShowRecordForm(false); showToastMessage("Rekod disimpan ke arkib!");
             };
 
+            const predictionData = useMemo(() => {
+                if (activeTab !== 'ramalan') return null;
+
+                // Fungsi menyemak jika atlet adalah Tahun 6 / 12 Tahun
+                const isLeaver = (ath) => {
+                    if (!ath) return false;
+                    if (ath.kelas) {
+                        const k = ath.kelas.toLowerCase();
+                        if (/\b6\b/.test(k) || k.includes('enam')) return true;
+                    }
+                    if (ath.kategori && ath.kategori.includes('12')) return true;
+                    return false;
+                };
+
+                const nextYear = parseInt(activeYear) + 1;
+                let predictedHouseStandings = {};
+                
+                // Penetapan markah awal rumah sukan
+                Object.keys(housesMetadata).forEach(name => {
+                    const meta = housesMetadata[name];
+                    predictedHouseStandings[name] = { emas: 0, perak: 0, gangsa: 0, keempat: 0, mata: parseInt(meta.bonusPoints)||0 };
+                });
+
+                const predictedEvents = [];
+
+                // Kira semula kedudukan untuk setiap acara
+                eventsWithCode.forEach(ev => {
+                    const evResults = results.filter(r => r.eventId === ev.id).sort((a,b) => parseInt(a.kedudukan) - parseInt(b.kedudukan));
+                    let remainingResults = [];
+                    
+                    evResults.forEach(r => {
+                        let isLeaving = false;
+                        let athName = "";
+                        let athHouse = "";
+                        let athCat = "";
+                        
+                        if (r.athleteId && r.athleteId.startsWith("TEAM_")) {
+                            const parts = r.athleteId.split('_');
+                            athHouse = parts[1];
+                            athName = `PASUKAN ${parts[2]}`;
+                            const runners = athletes.filter(a => a.rumah === athHouse && a.acaraIds && a.acaraIds.includes(ev.id) && a.relayData && a.relayData[ev.id] && a.relayData[ev.id].pasukan === parts[2]);
+                            // Jika SEMUA pelari adalah tahun 6, buang pasukan ini dari ramalan
+                            if (runners.length > 0 && runners.every(a => isLeaver(a))) isLeaving = true;
+                        } else {
+                            const ath = athletes.find(a => a.id === r.athleteId);
+                            if (ath) {
+                                athName = ath.nama; athHouse = ath.rumah; athCat = ath.kategori;
+                                if (isLeaver(ath)) isLeaving = true;
+                            }
+                        }
+
+                        // Hanya simpan peserta yang kekal bertanding
+                        if (!isLeaving) {
+                            remainingResults.push({ ...r, originalKedudukan: r.kedudukan, athName, athHouse, athCat });
+                        }
+                    });
+
+                    // Agihkan kedudukan dan pingat baharu (Prinsip Penggantian)
+                    let currentRank = 1;
+                    const newEvResults = [];
+                    remainingResults.forEach(rr => {
+                        if (currentRank <= 4) {
+                            rr.newKedudukan = currentRank.toString();
+                            newEvResults.push(rr);
+                            if (predictedHouseStandings[rr.athHouse]) {
+                                const h = predictedHouseStandings[rr.athHouse];
+                                if (currentRank === 1) { h.emas++; h.mata += pointsConfig.emas; }
+                                else if (currentRank === 2) { h.perak++; h.mata += pointsConfig.perak; }
+                                else if (currentRank === 3) { h.gangsa++; h.mata += pointsConfig.gangsa; }
+                                else if (currentRank === 4) { h.keempat++; h.mata += pointsConfig.keempat; }
+                            }
+                            currentRank++;
+                        }
+                    });
+
+                    if (newEvResults.length > 0 || evResults.length > 0) {
+                        predictedEvents.push({ ...ev, oldResults: evResults, newResults: newEvResults });
+                    }
+                });
+
+                // Tentukan kedudukan ramalan rumah sukan
+                const sortedHouses = Object.entries(predictedHouseStandings).map(([nama, data]) => ({ nama, ...data, ...COLOR_PRESETS[housesMetadata[nama]?.warnaLabel || 'Merah'] })).sort((a, b) => {
+                    if (b.emas !== a.emas) return b.emas - a.emas;
+                    if (b.perak !== a.perak) return b.perak - a.perak;
+                    if (b.gangsa !== a.gangsa) return b.gangsa - a.gangsa;
+                    if (b.keempat !== a.keempat) return b.keempat - a.keempat;
+                    return b.mata - a.mata;
+                });
+
+                return { nextYear, sortedHouses, predictedEvents };
+            }, [activeTab, results, athletes, eventsWithCode, housesMetadata, pointsConfig, activeYear]);
+
             const TABS = [
                 { id: "dashboard", label: "Papan Pemuka" },
                 { id: "rumah_sukan", label: "Rumah Sukan", reqAdmin: true },
                 { id: "acara", label: "Pengurusan Acara", reqAdmin: true },
                 { id: "atlit", label: "Pengurusan Atlet", reqAdmin: true },
                 { id: "keputusan", label: "Keputusan Acara" },
+                { id: "ramalan", label: "Ramalan Hadapan", reqAdmin: true },
                 { id: "pasca_sukan", label: "Pasca Sukan", reqAdmin: true }
             ].filter(tab => !tab.reqAdmin || userRole !== 'pelawat');
 
@@ -1479,477 +1572,101 @@
                             </div>
                         )}
 
-                        {}
-                        {activeTab === "rumah_sukan" && userRole !== "pelawat" && (
-                            <div className="space-y-6">
-                                <div className="bg-white p-4 border rounded-2xl flex justify-between items-center shadow-sm">
-                                    <div><h3 className="font-bold">Pengurusan Rumah Sukan</h3><p className="text-xs text-slate-400">Kelola slogan, guru penasihat, dan keahlian.</p></div>
-                                    <button onClick={() => { setHouseForm({nama:"", slogan:"", guruPenasihat:"", bonusPoints:0, warnaLabel:"Ungu"}); setIsEditingHouse(false); setIsHouseSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">+ Tambah Rumah</button>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {Object.entries(housesMetadata).map(([name, meta]) => {
-                                        const preset = COLOR_PRESETS[meta.warnaLabel] || COLOR_PRESETS.Merah;
-                                        const advisors = meta.guruPenasihat ? meta.guruPenasihat.split(',').filter(Boolean) : [];
-                                        const hAthletes = athletes.filter(a => a.rumah === name);
-                                        return (
-                                            <div key={name} className="bg-white p-5 border rounded-2xl relative overflow-hidden shadow-sm hover:shadow-md transition">
-                                                <div className={`absolute top-0 left-0 w-full h-2 ${preset.warna}`}></div>
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div><h4 className="text-xl font-black">Rumah {name}</h4><p className="text-xs text-indigo-600 font-bold italic">"{meta.slogan}"</p></div>
-                                                    <button onClick={() => { setHouseForm({nama:name, ...meta}); setOriginalHouseKey(name); setIsEditingHouse(true); setIsHouseSidebarOpen(true); }} className="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Edit</button>
-                                                </div>
-                                                <div className="bg-slate-50 p-3 rounded-xl border text-xs mb-3 space-y-2">
-                                                    <p className="font-bold">Mata Bonus Perbarisan: <span className="text-indigo-600">{meta.bonusPoints}</span></p>
-                                                    <div>
-                                                        <p className="font-bold text-slate-400 uppercase text-[10px]">Guru Penasihat</p>
-                                                        <div className="flex flex-wrap gap-1.5 mt-1">
-                                                            {advisors.map(adv => (
-                                                                <span key={adv} className="bg-white border px-2 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 shadow-sm">
-                                                                    {adv} <button onClick={() => {
-                                                                        if(!checkAuth()) return;
-                                                                        const updated = {...housesMetadata};
-                                                                        updated[name].guruPenasihat = advisors.filter(a => a !== adv).join(',');
-                                                                        if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('houses').set(updated);
-                                                                        else setHousesMetadata(updated);
-                                                                    }} className="text-red-500 hover:text-red-700 ml-1 font-bold">✕</button>
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                        <div className="flex gap-1 mt-2">
-                                                            <input type="text" value={newAdvisorText[name]||""} onChange={e => setNewAdvisorText({...newAdvisorText, [name]:e.target.value})} placeholder="Tambah nama guru..." className="flex-1 border p-1.5 rounded-lg text-xs" />
-                                                            <button onClick={() => {
-                                                                if(!checkAuth()) return;
-                                                                if(!newAdvisorText[name]) return;
-                                                                const updated = {...housesMetadata};
-                                                                const curr = updated[name].guruPenasihat ? updated[name].guruPenasihat.split(',') : [];
-                                                                curr.push(newAdvisorText[name]); updated[name].guruPenasihat = curr.join(',');
-                                                                if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('houses').set(updated);
-                                                                else setHousesMetadata(updated);
-                                                                setNewAdvisorText({...newAdvisorText, [name]:""});
-                                                            }} className="bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-slate-700 transition">Tambah</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2 mt-3">
-                                                    <button onClick={() => { setSelectedMembersHouse(name); setShowMembersModal(true); }} className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-xl font-bold text-xs border border-indigo-100 transition shadow-sm">👥 Kelola Ahli ({hAthletes.length})</button>
-                                                    <button onClick={() => executeBypassPrint('kehadiran_rumah', { houseName: name })} className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 rounded-xl font-bold text-xs border border-emerald-100 transition shadow-sm">🖨️ Cetak Kehadiran</button>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {}
-                        {activeTab === "acara" && userRole !== "pelawat" && (
-                            <div className="space-y-6">
-                                <div className="bg-white p-4 border rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
-                                    <div><h3 className="font-bold">Pengurusan Acara Sukan</h3><p className="text-xs text-slate-400">Tetapan Format Individu / Berkumpulan (Relay) & Penjanaan Borang.</p></div>
-                                    <div className="flex flex-wrap w-full md:w-auto gap-2">
-                                        <select value={selectedEventDate} onChange={e => setSelectedEventDate(e.target.value)} className="flex-1 border p-2 rounded-xl text-xs font-bold bg-slate-50">
-                                            <option value="Semua">Semua Hari</option>
-                                            {uniqueEventDates.map(d => <option key={d} value={d}>{formatDateToDMY(d)}</option>)}
-                                        </select>
-                                        <button onClick={() => { setEventForm({ id:"", noAcara:"", nama:"", kategori:categories[0], jenis:"Balapan", format:"Individu", tarikh:"", masa:"" }); setIsEditingEvent(false); setIsEventSidebarOpen(true); }} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition whitespace-nowrap">+ Daftar Acara</button>
+                        {activeTab === "ramalan" && userRole !== "pelawat" && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="bg-white p-6 border rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-indigo-50 to-blue-50">
+                                    <div>
+                                        <h3 className="text-xl font-black text-indigo-900">🔮 Ramalan Tahun Hadapan ({predictionData?.nextYear})</h3>
+                                        <p className="text-sm text-slate-600 mt-1">Sistem mengeluarkan murid Tahun 6 secara automatik dan menaikkan kedudukan pemenang yang kekal (Prinsip Penggantian Kedudukan).</p>
                                     </div>
-                                </div>
-                                <div className="bg-white border rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
-                                    {eventsWithCode.filter(e => selectedEventDate === "Semua" || e.tarikh === selectedEventDate).map(ev => (
-                                        <div key={ev.id} className="bg-slate-50 hover:bg-slate-100 transition border p-4 rounded-xl flex flex-col lg:flex-row justify-between items-start lg:items-center text-xs gap-4">
-                                            <div className="flex gap-3 items-center w-full lg:w-auto">
-                                                <span className="bg-indigo-600 text-white px-3 py-2 rounded-lg font-mono font-bold shadow-sm">{ev.kodAcara}</span>
-                                                <div className="flex-1">
-                                                    <h4 className="font-extrabold uppercase text-sm text-slate-900 leading-tight">{ev.nama} <span className="text-indigo-600">{ev.kategori}</span></h4>
-                                                    <div className="text-slate-500 font-semibold mt-1 flex items-center gap-1.5 flex-wrap">
-                                                        <span>{ev.jenis}</span>
-                                                        <span className="text-[10px]">•</span>
-                                                        <span className={ev.format==="Berkumpulan"?"text-purple-600 font-bold bg-purple-100 px-1.5 py-0.5 rounded":""}>{ev.format}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col lg:items-end gap-3 w-full lg:w-auto pt-3 lg:pt-0 border-t border-slate-200 lg:border-0">
-                                                <div className="flex flex-wrap justify-between lg:justify-end items-center gap-3 w-full">
-                                                    <span className="text-slate-500 bg-white border px-2.5 py-1 rounded-lg shadow-sm whitespace-nowrap text-[10px]">📅 {formatDateToDMY(ev.tarikh)} {ev.masa}</span>
-                                                    <div className="flex gap-2">
-                                                        <button onClick={() => { setEventForm(ev); setIsEditingEvent(true); setIsEventSidebarOpen(true); }} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-1.5 rounded-lg transition shadow-sm font-bold">Edit</button>
-                                                        <button onClick={() => {
-                                                            if(!checkAuth()) return;
-                                                            if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('events').doc(ev.id).delete();
-                                                            else setEvents(events.filter(x => x.id !== ev.id));
-                                                        }} className="text-red-600 bg-red-50 hover:bg-red-100 px-4 py-1.5 rounded-lg transition shadow-sm font-bold">Padam</button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 w-full lg:justify-end">
-                                                    <button onClick={() => {
-                                                        setActiveRegEvent(ev);
-                                                        const initialData = {};
-                                                        athletes.forEach(a => {
-                                                            if (a.acaraIds && a.acaraIds.includes(ev.id)) {
-                                                                initialData[a.id] = { selected: true, pasukan: (a.relayData && a.relayData[ev.id]?.pasukan) || "A", pelari: (a.relayData && a.relayData[ev.id]?.pelari) || "1" };
-                                                            }
-                                                        });
-                                                        setTempRegData(initialData);
-                                                        setIsEventRegModalOpen(true);
-                                                    }} className="flex-1 sm:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">👥 Daftar Peserta</button>
-                                                    <button onClick={() => executeBypassPrint('marshall', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-indigo-700 border border-indigo-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ Cetak Marshall</button>
-                                                    {ev.jenis === "Balapan" && <button onClick={() => executeBypassPrint('hakim_penamat', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-rose-700 border border-rose-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ Hakim Penamat</button>}
-                                                    {ev.jenis === "Padang" && (
-                                                        <div className="flex flex-wrap gap-2 flex-1 sm:flex-none">
-                                                            <button onClick={() => executeBypassPrint('hakim_padang', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-emerald-700 border border-emerald-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ Borang Padang</button>
-                                                            {(ev.nama || "").toUpperCase().includes("LOMPAT TINGGI") && (
-                                                                <button onClick={() => executeBypassPrint('hakim_lompat_tinggi', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-teal-700 border border-teal-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ L.Tinggi</button>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {eventsWithCode.length === 0 && <p className="text-center text-slate-400 italic py-5">Tiada acara didaftarkan untuk tarikh ini.</p>}
-                                </div>
-                            </div>
-                        )}
-
-                        {}
-                        {activeTab === "atlit" && userRole !== "pelawat" && (
-                            <div className="space-y-6">
-                                <div className="bg-white p-4 border rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-4 shadow-sm">
-                                    <div><h3 className="font-bold">Pengurusan Atlet / Murid</h3><p className="text-xs text-slate-400">Daftar murid dan tetapkan penyertaan acara (Individu & Pasukan).</p></div>
-                                    <div className="flex flex-wrap gap-2 items-center">
-                                        <input type="text" placeholder="Cari Nama Atlet..." value={athleteSearchQuery} onChange={e => setAthleteSearchQuery(e.target.value)} className="border p-2 rounded-xl text-xs font-bold bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-auto min-w-[200px]" />
-                                        <select value={athleteHouseFilter} onChange={e => setAthleteHouseFilter(e.target.value)} className="border p-2 rounded-xl text-xs font-bold bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
-                                            <option value="Semua">Semua Rumah</option>
-                                            {Object.keys(housesMetadata).map(k => <option key={k} value={k}>Rumah {k}</option>)}
-                                        </select>
-                                        <button onClick={() => { setAthleteForm({ id:"", nama:"", kelas:"", rumah:Object.keys(housesMetadata)[0]||"Merah", jantina:"Lelaki", kategori:categories[0] }); setIsEditingAthlete(false); setIsAddAthleteSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">+ Tambah Atlet</button>
-                                    </div>
-                                </div>
-                                <div className="bg-white border rounded-2xl overflow-x-auto shadow-sm">
-                                    <table className="w-full text-left text-xs">
-                                        <thead className="bg-slate-50 border-b">
-                                            <tr>
-                                                <th className="p-3 text-slate-500 uppercase">No</th>
-                                                <th className="p-3 text-slate-500 uppercase">No. Bib</th>
-                                                <th className="p-3 text-slate-500 uppercase">Nama</th>
-                                                <th className="p-3 text-slate-500 uppercase">Kelas</th>
-                                                <th className="p-3 text-slate-500 uppercase">Kategori</th>
-                                                <th className="p-3 text-slate-500 uppercase">Rumah</th>
-                                                <th className="p-3 text-slate-500 uppercase">Acara Berdaftar</th>
-                                                <th className="p-3 text-slate-500 uppercase text-center">Tindakan</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {athletes && athletes.length > 0 && athletes.filter(a => athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter)
-                                                .filter(a => !athleteSearchQuery || (a.nama && a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase())))
-                                                .map((ath, idx) => (
-                                                <tr key={ath.id} className="border-b font-semibold hover:bg-slate-50 transition">
-                                                    <td className="p-3 text-slate-500">{idx+1}</td>
-                                                    <td className="p-3 font-mono font-bold text-slate-600">{ath.noBib || "-"}</td>
-                                                    <td className="p-3 uppercase text-slate-900">{ath.nama}</td>
-                                                    <td className="p-3">{ath.kelas}</td>
-                                                    <td className="p-3 text-indigo-600 bg-indigo-50 font-bold">{ath.kategori}</td>
-                                                    <td className="p-3"><span className={`px-2 py-1 rounded-md text-[10px] text-white ${COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel || "Merah"]?.warna}`}>{ath.rumah}</span></td>
-                                                    <td className="p-3">
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {ath.acaraIds && ath.acaraIds.length > 0 ? ath.acaraIds.map(id => {
-                                                                const ev = (events||[]).find(e => e.id === id); 
-                                                                if(!ev) return null;
-                                                                const relayInfo = ath.relayData && ath.relayData[id] ? ` (Pskn ${ath.relayData[id].pasukan}-L${ath.relayData[id].pelari})` : "";
-                                                                return <span key={id} className="bg-white text-indigo-700 px-2 py-1 rounded-md text-[10px] border border-indigo-100 shadow-sm">{ev.nama}{relayInfo}</span>;
-                                                            }) : <span className="text-slate-400 italic bg-slate-100 px-2 py-1 rounded-md">Tiada Acara</span>}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <div className="flex justify-center items-center gap-3">
-                                                            <button onClick={() => { 
-                                                                setSelectedStudentId(ath.id); 
-                                                                setStudentSearchQuery(ath.nama); 
-                                                                setSelectedEventIds(ath.acaraIds||[]); 
-                                                                setSelectedRelayData(ath.relayData||{});
-                                                                setIsAssignEventSidebarOpen(true); 
-                                                            }} className="text-emerald-600 hover:text-emerald-800 hover:scale-110 transition text-sm" title="Tetapan Acara">⏱️</button>
-                                                            <button onClick={() => { setAthleteForm(ath); setIsEditingAthlete(true); setIsAddAthleteSidebarOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:scale-110 transition text-sm" title="Kemaskini Profil">✏️</button>
-                                                            <button onClick={() => {
-                                                                if(!checkAuth()) return;
-                                                                if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id).delete();
-                                                                else setAthletes(athletes.filter(x => x.id !== ath.id));
-                                                            }} className="text-red-500 hover:text-red-700 hover:scale-110 transition text-sm" title="Padam Rekod">✕</button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {(!athletes || athletes.filter(a => athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter)
-                                                     .filter(a => !athleteSearchQuery || (a.nama && a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase()))).length === 0) && (
-                                                <tr><td colSpan="8" className="text-center py-6 text-slate-400 italic">Tiada rekod atlet dijumpai.</td></tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
-
-                        {}
-                        {activeTab === "keputusan" && (
-                            <div className="space-y-6">
-                                <div className="bg-white p-5 border rounded-2xl flex flex-wrap justify-between items-end gap-4 shadow-sm">
-                                    <div className="flex-1 min-w-[300px]">
-                                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Pilih Acara Kejohanan</label>
-                                        <div className="flex gap-2 items-center">
-                                            <select value={resultForm.eventId} onChange={e => setResultForm({...resultForm, eventId:e.target.value})} className="w-full border p-2.5 rounded-xl bg-slate-50 font-bold text-sm hover:bg-white transition focus:ring-2 focus:ring-indigo-500">
-                                                <option value="">{userRole === "pelawat" ? "-- Sila Pilih Acara Untuk Melihat Keputusan --" : "-- Sila Pilih Acara Untuk Mengunci Keputusan --"}</option>
-                                                {eventsWithCode.map(ev => <option key={ev.id} value={ev.id}>[{ev.kodAcara}] {ev.nama} Kategori {ev.kategori}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <label className="flex items-center gap-2 cursor-pointer bg-slate-50 p-2.5 rounded-xl border">
-                                            <input type="checkbox" checked={cetakTop8Mode} onChange={e => setCetakTop8Mode(e.target.checked)} className="w-4 h-4 text-indigo-600 rounded" />
-                                            <span className="font-bold text-slate-700 uppercase text-[10px]">Cetak Top 8</span>
-                                        </label>
-                                        <button onClick={() => executeBypassPrint('semua_keputusan')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md whitespace-nowrap transition">🖨️ Cetak Keseluruhan</button>
-                                    </div>
+                                    <button onClick={() => window.print()} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition whitespace-nowrap">🖨️ Cetak Ramalan</button>
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-6">
-                                    <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-                                        <h3 className="font-bold border-b pb-2 flex justify-between items-center">
-                                            <span>🏅 Grid Keputusan Rasmi & Rekod Top 8</span>
-                                            {userRole === "pelawat" && <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded">Mod Baca Sahaja</span>}
-                                        </h3>
-                                        
-                                        {!resultForm.eventId ? <p className="text-slate-400 italic bg-slate-50 p-6 rounded-xl text-center text-xs border border-dashed">Sila pilih acara dari dropdown di atas untuk menyenaraikan peserta dan melihat/mengunci keputusan.</p> :
-                                        <form onSubmit={async (e) => {
-                                            e.preventDefault(); if(!checkAuth()) return;
-                                            const toDelete = results.filter(r => r.eventId === resultForm.eventId);
+                                <div className="bg-white p-5 border rounded-2xl shadow-sm">
+                                    <h3 className="font-bold border-b pb-2 mb-4 text-lg">📊 Unjuran Kedudukan Rumah Sukan {predictionData?.nextYear}</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {predictionData?.sortedHouses.map((h, i) => {
+                                            const currentRankIdx = houseStandings.findIndex(ch => ch.nama === h.nama);
+                                            const rankDiff = currentRankIdx - i; 
                                             
-                                            if (isCloudActive && db) {
-                                                const batch = db.batch();
-                                                toDelete.forEach(r => {
-                                                    const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('results').doc(r.id);
-                                                    batch.delete(ref);
-                                                });
-                                                Object.entries(gridResults).forEach(([athId, data]) => {
-                                                    if (data.kedudukan && data.kedudukan !== "") {
-                                                        const id = "R_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                                                        const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('results').doc(id);
-                                                        batch.set(ref, { id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan });
-                                                    }
-                                                });
-                                                await batch.commit();
-                                            } else {
-                                                const newResultsList = results.filter(r => r.eventId !== resultForm.eventId);
-                                                Object.entries(gridResults).forEach(([athId, data]) => {
-                                                    if (data.kedudukan && data.kedudukan !== "") {
-                                                        const id = "R_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                                                        newResultsList.push({ id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan });
-                                                    }
-                                                });
-                                                setResults(newResultsList);
-                                            }
-                                            createLog("Kunci Keputusan Pukal", `Mengemaskini grid keputusan untuk acara ${resultForm.eventId}`);
-                                            showToastMessage("Semua keputusan acara berjaya disimpan secara pukal!");
-                                        }} className="space-y-4 text-xs font-bold">
-                                            <div className="overflow-x-auto border rounded-xl">
-                                                <table className="w-full text-left">
-                                                    <thead className="bg-slate-100 border-b">
-                                                        <tr>
-                                                            <th className="p-3 uppercase text-slate-500">Nama Peserta / Pasukan (Rumah)</th>
-                                                            <th className="p-3 uppercase text-slate-500 w-44">Kedudukan</th>
-                                                            <th className="p-3 uppercase text-slate-500 w-48">Catatan Masa / Jarak</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {(() => {
-                                                            const ev = events.find(e => e.id === resultForm.eventId);
-                                                            let activeEntities = [];
-                                                            if (ev) {
-                                                                if (ev.format === "Berkumpulan") {
-                                                                    const evAthletes = athletes.filter(a => a.acaraIds && a.acaraIds.includes(ev.id));
-                                                                    const teams = {};
-                                                                    evAthletes.forEach(a => {
-                                                                        const rData = (a.relayData && a.relayData[ev.id]) || { pasukan: "A", pelari: "1" };
-                                                                        const tKey = `TEAM_${a.rumah}_${rData.pasukan}`;
-                                                                        if (!teams[tKey]) teams[tKey] = { id: tKey, nameDisplay: `PASUKAN ${rData.pasukan}`, houseDisplay: a.rumah };
-                                                                    });
-                                                                    activeEntities = Object.values(teams).sort((a,b)=>a.houseDisplay.localeCompare(b.houseDisplay));
-                                                                } else {
-                                                                    activeEntities = athletes.filter(a => a.acaraIds && a.acaraIds.includes(ev.id)).map(a => ({
-                                                                        id: a.id, nameDisplay: a.nama, houseDisplay: a.rumah
-                                                                    })).sort((a,b)=>a.nameDisplay.localeCompare(b.nameDisplay));
-                                                                }
-                                                            }
-                                                            if (activeEntities.length === 0) return <tr><td colSpan="3" className="p-4 text-center italic text-slate-400 bg-white">Tiada peserta didaftarkan untuk acara ini.</td></tr>;
-                                                            
-                                                            return activeEntities.map(ent => (
-                                                                <tr key={ent.id} className="border-b bg-white hover:bg-slate-50 transition">
-                                                                    <td className="p-3">
-                                                                        <span className="block text-slate-900 uppercase font-black text-sm">{ent.nameDisplay}</span>
-                                                                        <span className="text-[10px] text-slate-500 uppercase">Rumah {ent.houseDisplay}</span>
-                                                                    </td>
-                                                                    <td className="p-3">
-                                                                        {userRole === "pelawat" || isSystemLocked ? (
-                                                                            <span className="font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 block text-center">
-                                                                                {gridResults[ent.id]?.kedudukan ? `Kedudukan ${gridResults[ent.id]?.kedudukan}` : "-"}
-                                                                            </span>
-                                                                        ) : (
-                                                                            <select value={gridResults[ent.id]?.kedudukan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { catatan: "" }), kedudukan: e.target.value }}))} className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition">
-                                                                                <option value="">-- Tiada --</option>
-                                                                                <option value="1">🥇 1 (Johan)</option>
-                                                                                <option value="2">🥈 2 (Naib Johan)</option>
-                                                                                <option value="3">🥉 3 (Ketiga)</option>
-                                                                                <option value="4">🏅 4 (Keempat)</option>
-                                                                                <option value="5">5 (Kelima)</option>
-                                                                                <option value="6">6 (Keenam)</option>
-                                                                                <option value="7">7 (Ketujuh)</option>
-                                                                                <option value="8">8 (Kelapan)</option>
-                                                                            </select>
-                                                                        )}
-                                                                    </td>
-                                                                    <td className="p-3">
-                                                                        {userRole === "pelawat" || isSystemLocked ? (
-                                                                            <span className="font-mono font-bold text-slate-700 block mt-1">{gridResults[ent.id]?.catatan || "-"}</span>
-                                                                        ) : (
-                                                                            <input type="text" value={gridResults[ent.id]?.catatan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { kedudukan: "" }), catatan: e.target.value }}))} placeholder="Cth: 10.5s atau 4.2m" className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition font-mono" />
-                                                                        )}
-                                                                    </td>
-                                                                </tr>
-                                                            ));
-                                                        })()}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            {userRole !== "pelawat" && !isSystemLocked && (
-                                                <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white py-3.5 rounded-xl transition shadow-md text-sm tracking-wide font-black">💾 SIMPAN SEMUA KEPUTUSAN (GRID)</button>
-                                            )}
-                                        </form>
-                                        }
+                                            return (
+                                                <div key={h.nama} className={`bg-white border p-4 rounded-2xl relative overflow-hidden transition-all duration-300 ${h.glow}`}>
+                                                    <div className={`absolute top-0 left-0 w-full h-1.5 ${h.warna}`}></div>
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase">Kedudukan #{i+1}</span>
+                                                            <h3 className="font-black text-lg">Rumah {h.nama}</h3>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className={`text-2xl font-black ${h.teks}`}>{h.mata}</span>
+                                                            {rankDiff !== 0 && (
+                                                                <div className={`text-[10px] font-bold mt-1 px-1.5 py-0.5 rounded ${rankDiff > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                                                    {rankDiff > 0 ? '▲ Naik' : '▼ Turun'} {Math.abs(rankDiff)} Takuk
+                                                                </div>
+                                                            )}
+                                                            {rankDiff === 0 && <div className="text-[10px] font-bold mt-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">- Kekal</div>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 gap-2 mt-4 text-center text-xs font-bold bg-slate-50 p-2 rounded-xl">
+                                                        <div>🥇<br/>{h.emas}</div>
+                                                        <div>🥈<br/>{h.perak}</div>
+                                                        <div>🥉<br/>{h.gangsa}</div>
+                                                        <div>🏅<br/>{h.keempat}</div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                                    <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-                                        <h3 className="font-bold border-b pb-2 flex items-center gap-2 text-indigo-900">🌟 Carian Olahragawan & Olahragawati</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-2 opacity-20 text-4xl">👨‍👦</div>
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-wider">Olahragawan (Lelaki)</p>
-                                                    <div className="flex gap-1 z-10 relative">
-                                                        <select value={bestAthleteMaleCat} onChange={e=>setBestAthleteMaleCat(e.target.value)} className="border border-blue-200 p-1 rounded-lg text-[10px] font-bold bg-white outline-none focus:ring-1 focus:ring-blue-500">
-                                                            <option value="">-- Kategori --</option>
-                                                            <option value="Keseluruhan">Keseluruhan</option>
-                                                            {categories.filter(c => !c.toUpperCase().startsWith('P')).map(c => <option key={c} value={c}>{c}</option>)}
-                                                        </select>
-                                                        <button onClick={() => setBestMaleResults(bestAthleteMaleCat === "Keseluruhan" ? calculateOverallBest("Lelaki") : calculateBest("Lelaki", bestAthleteMaleCat))} className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
-                                                    </div>
-                                                </div>
-                                                {bestMaleResults && bestMaleResults.length > 0 ? (
-                                                    <div className="relative z-10 space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                                                        {bestMaleResults.map(ath => (
-                                                            <div key={ath.id} className="bg-white/60 p-2.5 rounded-xl border border-white/50 shadow-sm">
-                                                                <p className="font-black text-sm uppercase text-slate-900 leading-tight">{ath.nama}</p>
-                                                                <p className="text-[10px] font-bold text-slate-600 mt-0.5">Rumah {ath.rumah} | Kelas {ath.kelas}</p>
-                                                                <div className="mt-2 flex gap-2 text-[10px] font-bold">
-                                                                    <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">🥇 {ath.g}</span>
-                                                                    <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">🥈 {ath.s}</span>
-                                                                    <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">🥉 {ath.b}</span>
-                                                                    <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">🏅 {ath.k}</span>
-                                                                    <span className="ml-auto bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-black">Pts: {ath.pts}</span>
-                                                                </div>
-                                                                {ath.senaraiAcara && ath.senaraiAcara.length > 0 && (
-                                                                    <div className="mt-2 border-t border-blue-200/50 pt-1.5">
-                                                                        <p className="text-[9px] font-bold text-blue-800 mb-1">Senarai Acara Dimasuki & Pingat:</p>
-                                                                        <ul className="text-[9px] text-slate-700 space-y-0.5 ml-3 list-disc">
-                                                                            {ath.senaraiAcara.sort((a,b)=>a.kedudukan-b.kedudukan).map((ac, idx) => (
-                                                                                <li key={idx}><span className="font-bold">{ac.pingat}</span> - {ac.namaAcara} {ac.kategori}</li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded font-semibold mt-2 relative z-10">{!bestAthleteMaleCat ? "Pilih kategori & tekan Cari." : "Belum ada rekod / Tiada pemenang."}</p>}
-                                            </div>
-                                            <div className="bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-2 opacity-20 text-4xl">👩‍👧</div>
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <p className="text-[10px] font-black text-pink-800 uppercase tracking-wider">Olahragawati (Perempuan)</p>
-                                                    <div className="flex gap-1 z-10 relative">
-                                                        <select value={bestAthleteFemaleCat} onChange={e=>setBestAthleteFemaleCat(e.target.value)} className="border border-pink-200 p-1 rounded-lg text-[10px] font-bold bg-white outline-none focus:ring-1 focus:ring-pink-500">
-                                                            <option value="">-- Kategori --</option>
-                                                            <option value="Keseluruhan">Keseluruhan</option>
-                                                            {categories.filter(c => !c.toUpperCase().startsWith('L')).map(c => <option key={c} value={c}>{c}</option>)}
-                                                        </select>
-                                                        <button onClick={() => setBestFemaleResults(bestAthleteFemaleCat === "Keseluruhan" ? calculateOverallBest("Perempuan") : calculateBest("Perempuan", bestAthleteFemaleCat))} className="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
-                                                    </div>
-                                                </div>
-                                                {bestFemaleResults && bestFemaleResults.length > 0 ? (
-                                                    <div className="relative z-10 space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                                                        {bestFemaleResults.map(ath => (
-                                                            <div key={ath.id} className="bg-white/60 p-2.5 rounded-xl border border-white/50 shadow-sm">
-                                                                <p className="font-black text-sm uppercase text-slate-900 leading-tight">{ath.nama}</p>
-                                                                <p className="text-[10px] font-bold text-slate-600 mt-0.5">Rumah {ath.rumah} | Kelas {ath.kelas}</p>
-                                                                <div className="mt-2 flex gap-2 text-[10px] font-bold">
-                                                                    <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">🥇 {ath.g}</span>
-                                                                    <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">🥈 {ath.s}</span>
-                                                                    <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">🥉 {ath.b}</span>
-                                                                    <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">🏅 {ath.k}</span>
-                                                                    <span className="ml-auto bg-pink-100 text-pink-800 px-1.5 py-0.5 rounded font-black">Pts: {ath.pts}</span>
-                                                                </div>
-                                                                {ath.senaraiAcara && ath.senaraiAcara.length > 0 && (
-                                                                    <div className="mt-2 border-t border-pink-200/50 pt-1.5">
-                                                                        <p className="text-[9px] font-bold text-pink-800 mb-1">Senarai Acara Dimasuki & Pingat:</p>
-                                                                        <ul className="text-[9px] text-slate-700 space-y-0.5 ml-3 list-disc">
-                                                                            {ath.senaraiAcara.sort((a,b)=>a.kedudukan-b.kedudukan).map((ac, idx) => (
-                                                                                <li key={idx}><span className="font-bold">{ac.pingat}</span> - {ac.namaAcara} {ac.kategori}</li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded font-semibold mt-2 relative z-10">{!bestAthleteFemaleCat ? "Pilih kategori & tekan Cari." : "Belum ada rekod / Tiada pemenang."}</p>}
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="bg-white border rounded-2xl p-5 shadow-sm flex flex-col">
-                                        <div className="flex justify-between items-center border-b pb-2 mb-3">
-                                            <h3 className="font-bold flex items-center gap-2 text-amber-800">🏆 Arkib Rekod Kejohanan</h3>
-                                            {userRole !== "pelawat" && <button onClick={()=>{setRecordForm({id:"", acara:"", kategori:categories[0]||"", catatan:"", nama:"", tahun:activeYear}); setShowRecordForm(true);}} className="bg-amber-500 hover:bg-amber-600 transition text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">+ Rekod Baharu</button>}
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto max-h-[300px] space-y-2 text-xs pr-1">
-                                            {records.length === 0 ? <p className="text-slate-400 italic bg-slate-50 p-4 rounded-xl text-center">Tiada data rekod kejohanan dijumpai.</p> : 
-                                                records.sort((a,b)=>b.tahun.localeCompare(a.tahun)).map(rec => (
-                                                    <div key={rec.id} className="bg-gradient-to-r from-amber-50 to-white border border-amber-100 p-3 rounded-xl flex justify-between items-center shadow-sm hover:shadow transition">
-                                                        <div>
-                                                            <p className="font-extrabold text-amber-900 uppercase text-sm mb-1">{rec.acara} <span className="text-slate-600 text-[10px]">({rec.kategori})</span></p>
-                                                            <div className="flex items-center gap-2 text-[11px] font-semibold">
-                                                                <span className="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-mono shadow-sm">{rec.catatan}</span>
-                                                                <span className="text-slate-700 uppercase">{rec.nama}</span>
-                                                                <span className="text-slate-400">[{rec.tahun}]</span>
-                                                            </div>
-                                                        </div>
-                                                        {userRole !== "pelawat" && (
-                                                            <button onClick={()=>{
-                                                                if(!checkAuth()) return;
-                                                                if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('records').doc(rec.id).delete();
-                                                                else setRecords(records.filter(x=>x.id!==rec.id));
-                                                            }} className="text-red-500 hover:scale-110 transition text-sm font-bold p-2 bg-white rounded-lg shadow-sm border border-red-100">✕</button>
-                                                        )}
+                                <div className="bg-white p-5 border rounded-2xl shadow-sm space-y-4">
+                                    <h3 className="font-bold border-b pb-2 mb-4 text-lg">🏃 Unjuran Pemenang Setiap Acara</h3>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        {predictionData?.predictedEvents.map(ev => (
+                                            <div key={ev.id} className="bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-sm">
+                                                <h4 className="font-bold text-indigo-900 mb-3 border-b border-slate-200 pb-2">[{ev.kodAcara}] {ev.nama} ({ev.kategori})</h4>
+                                                {ev.newResults.length > 0 ? (
+                                                    <ul className="space-y-2">
+                                                        {ev.newResults.map(r => (
+                                                            <li key={r.id} className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs bg-white p-3 border rounded-lg shadow-sm">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`flex items-center justify-center w-6 h-6 rounded-full font-black text-white ${r.newKedudukan==='1'?'bg-yellow-500':r.newKedudukan==='2'?'bg-slate-400':r.newKedudukan==='3'?'bg-orange-500':'bg-blue-500'}`}>
+                                                                        {r.newKedudukan}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="font-bold uppercase text-slate-800">{r.athName}</p>
+                                                                        <p className="text-[10px] text-slate-500 uppercase">Rumah {r.athHouse} {r.athCat ? `| ${r.athCat}` : ''}</p>
+                                                                    </div>
+                                                                </div>
+                                                                {r.originalKedudukan !== r.newKedudukan ? (
+                                                                    <span className="bg-emerald-100 border border-emerald-200 text-emerald-700 font-bold px-2 py-1.5 rounded text-[10px] whitespace-nowrap text-center">
+                                                                        ▲ Naik dari Tempat Ke-{r.originalKedudukan}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="bg-slate-100 border border-slate-200 text-slate-500 font-bold px-2 py-1.5 rounded text-[10px] whitespace-nowrap text-center">
+                                                                        Kekal Tempat Ke-{r.originalKedudukan}
+                                                                    </span>
+                                                                )}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <div className="text-center p-4 bg-white rounded-lg border">
+                                                        <p className="text-xs text-slate-400 italic font-semibold">Tiada pemenang tahun ini kekal untuk tahun hadapan bagi acara ini.</p>
                                                     </div>
-                                                ))
-                                            }
-                                        </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {predictionData?.predictedEvents.length === 0 && (
+                                            <div className="col-span-1 lg:col-span-2 text-center py-8">
+                                                <p className="text-slate-400 italic">Tiada keputusan acara direkodkan untuk dijana unjuran.</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {}
                         {activeTab === "pasca_sukan" && userRole !== "pelawat" && (
                             <div className="space-y-6">
                                 <div className="bg-white p-6 border rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
