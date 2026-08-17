@@ -1845,7 +1845,7 @@
                                                         if (data.kedudukan && data.kedudukan !== "") {
                                                             const id = "R_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
                                                             const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('results').doc(id);
-                                                            batch.set(ref, { id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan });
+                                                            batch.set(ref, { id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan || "-" });
                                                         }
                                                     });
                                                     await batch.commit();
@@ -1854,7 +1854,7 @@
                                                     Object.entries(gridResults).forEach(([athId, data]) => {
                                                         if (data.kedudukan && data.kedudukan !== "") {
                                                             const id = "R_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                                                            newResultsList.push({ id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan });
+                                                            newResultsList.push({ id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan || "-" });
                                                         }
                                                     });
                                                     setResults(newResultsList);
