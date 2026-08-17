@@ -695,8 +695,9 @@
                 });
             };
 
-            const executeBypassPrint = (mode, targetData = null) => {
+            const executeBypassPrint = (mode, targetData = null, options = {}) => {
                 setCurrentPrintMode(mode);
+                const isTop8 = options.isTop8 !== undefined ? options.isTop8 : cetakTop8Mode;
                 let printContent = "";
                 const headerHtml = `
                     <div style="text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 15px; margin-bottom: 20px;">
@@ -709,7 +710,7 @@
                 if (mode === 'semua_keputusan') {
                     const eventTables = eventsWithCode.map(ev => {
                         const evResults = results.filter(r => r.eventId === ev.id).sort((a,b) => parseInt(a.kedudukan) - parseInt(b.kedudukan));
-                        const filteredResults = cetakTop8Mode ? evResults.filter(r => parseInt(r.kedudukan) <= 8) : evResults.filter(r => parseInt(r.kedudukan) <= 4);
+                        const filteredResults = isTop8 ? evResults.filter(r => parseInt(r.kedudukan) <= 8) : evResults.filter(r => parseInt(r.kedudukan) <= 4);
                         if (filteredResults.length === 0) return '';
                         
                         const rows = filteredResults.map(res => {
@@ -782,7 +783,7 @@
                     printContent = `
                         <div style="font-family: sans-serif; padding: 20px; color: #1e293b;">
                             ${headerHtml}
-                            <h2 style="text-align: center; margin-bottom: 25px; color: #b45309; text-transform: uppercase;">Keputusan Keseluruhan Semua Acara ${cetakTop8Mode ? "(Top 8)" : ""}</h2>
+                            <h2 style="text-align: center; margin-bottom: 25px; color: #b45309; text-transform: uppercase;">Keputusan Keseluruhan Semua Acara ${isTop8 ? "(Top 8)" : ""}</h2>
                             ${eventTables || '<p style="text-align:center; color:#64748b;">Tiada keputusan direkodkan lagi.</p>'}
                         </div>
                     `;
@@ -1819,7 +1820,7 @@
                                                     <input type="checkbox" checked={cetakTop8Mode} onChange={e => setCetakTop8Mode(e.target.checked)} className="w-4 h-4 text-indigo-600 rounded cursor-pointer" />
                                                     <span className="text-[10px] font-bold text-slate-700 uppercase">Cetak Hingga Ke-8</span>
                                                 </label>
-                                                <button onClick={() => executeBypassPrint('semua_keputusan')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md whitespace-nowrap transition">🖨️ Cetak Semua Keputusan</button>
+                                                <button onClick={() => executeBypassPrint('semua_keputusan', null, { isTop8: cetakTop8Mode })} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md whitespace-nowrap transition">🖨️ Cetak Semua Keputusan</button>
                                             </div>
                                         </div>
                                     </div>
