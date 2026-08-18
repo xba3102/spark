@@ -198,6 +198,8 @@
             const [isEventRegModalOpen, setIsEventRegModalOpen] = useState(false);
             const [activeRegEvent, setActiveRegEvent] = useState(null);
             const [tempRegData, setTempRegData] = useState({});
+            const [regModalHouseFilter, setRegModalHouseFilter] = useState("Semua");
+            const [regModalCategoryFilter, setRegModalCategoryFilter] = useState("Semua");
 
             const [gridResults, setGridResults] = useState({});
             const [cetakTop8Mode, setCetakTop8Mode] = useState(false);
@@ -1743,6 +1745,8 @@
                                                             }
                                                         });
                                                         setTempRegData(initialData);
+                                                        setRegModalHouseFilter("Semua");
+                                                        setRegModalCategoryFilter("Semua");
                                                         setIsEventRegModalOpen(true);
                                                     }} className="flex-1 sm:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">👥 Daftar Peserta</button>
                                                     <button onClick={() => executeBypassPrint('marshall', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-indigo-700 border border-indigo-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ Cetak Marshall</button>
@@ -2564,18 +2568,37 @@
                                     <p className="text-indigo-600 font-bold mt-1">Kategori: {activeRegEvent.kategori} | Format: {activeRegEvent.format}</p>
                                 </div>
                                 
+                                <div className="flex gap-2">
+                                    <select value={regModalHouseFilter} onChange={e => setRegModalHouseFilter(e.target.value)} className="border-2 border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 outline-none flex-1 focus:border-indigo-500 transition">
+                                        <option value="Semua">Semua Rumah</option>
+                                        {Object.keys(housesMetadata).map(h => <option key={h} value={h}>Rumah {h}</option>)}
+                                    </select>
+                                    <select value={regModalCategoryFilter} onChange={e => setRegModalCategoryFilter(e.target.value)} className="border-2 border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 outline-none flex-1 focus:border-indigo-500 transition">
+                                        <option value="Semua">Semua Kategori</option>
+                                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                                
                                 <div className="flex-1 overflow-y-auto space-y-2 pr-2">
                                     {(() => {
                                         const eligibleAthletes = athletes.filter(a => {
                                             if (!categoriesMatch(a.kategori, activeRegEvent.kategori)) return false;
                                             const evCatStr = (activeRegEvent.kategori || "").trim().toUpperCase();
-                                            if (evCatStr === "TERBUKA" || evCatStr === "KESELURUHAN") return true;
-                                            if (a.jantina === "Lelaki" && evCatStr.startsWith("P")) return false;
-                                            if (a.jantina === "Perempuan" && evCatStr.startsWith("L")) return false;
+                                            if (evCatStr === "TERBUKA" || evCatStr === "KESELURUHAN") {
+                                                // open event, skip gender filter
+                                            } else {
+                                                if (a.jantina === "Lelaki" && evCatStr.startsWith("P")) return false;
+                                                if (a.jantina === "Perempuan" && evCatStr.startsWith("L")) return false;
+                                            }
+                                            
+                                            // UI Filters
+                                            if (regModalHouseFilter !== "Semua" && a.rumah !== regModalHouseFilter) return false;
+                                            if (regModalCategoryFilter !== "Semua" && a.kategori !== regModalCategoryFilter) return false;
+                                            
                                             return true;
                                         }).sort((a, b) => a.rumah.localeCompare(b.rumah) || a.nama.localeCompare(b.nama));
                                         
-                                        if (eligibleAthletes.length === 0) return <p className="text-center text-slate-400 italic py-6">Tiada atlet yang melepasi syarat kategori jantina dan umur untuk acara ini.</p>;
+                                        if (eligibleAthletes.length === 0) return <p className="text-center text-slate-400 italic py-6">Tiada atlet yang melepasi syarat / tapisan untuk acara ini.</p>;
                                         
                                         return eligibleAthletes.map(ath => {
                                             const isChecked = !!tempRegData[ath.id]?.selected;
