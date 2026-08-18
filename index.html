@@ -225,6 +225,7 @@
 
             const [kokumManualText, setKokumManualText] = useState(() => localStorage.getItem('sps_kokum_manual') || `<b>1. Kehadiran Tetamu / Jemputan:</b><br><br><br><b>2. Kewangan & Perbelanjaan:</b><br><br><br><b>3. Kekuatan Program:</b><br><br><br><b>4. Isu / Cabaran & Cadangan Penambahbaikan:</b><br><br><br>`);
             const [currentPrintMode, setCurrentPrintMode] = useState("");
+            const [shareText, setShareText] = useState("");
 
             const [previewContent, setPreviewContent] = useState("");
             const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -1227,6 +1228,8 @@
                     const certTitle = hasWon ? "SIJIL PENCAPAIAN" : "SIJIL PENGHARGAAN";
                     
                     let achievementText = "";
+                    let plainTextForShare = `Tahniah ${targetData.nama} (Rumah ${targetData.rumah}) atas penyertaan dengan semangat kesukanan yang cemerlang dalam ${activeSchoolSubtitle} ${activeYear}!`;
+
                     if (hasWon) {
                         const medals = athResults.map(r => {
                             const ev = events.find(e => e.id === r.eventId);
@@ -1234,9 +1237,18 @@
                             return `${medalName} dalam acara ${ev ? ev.nama : "Tidak Diketahui"}`;
                         });
                         achievementText = `<p style="font-size: 15px; font-weight: bold; color: #1e3a8a; margin: 15px 0; line-height: 1.5;">Tahniah, kerana telah memenangi pingat:<br>${medals.join('<br>')}</p>`;
+                        
+                        const medalsShare = athResults.map(r => {
+                            const ev = events.find(e => e.id === r.eventId);
+                            const medalName = r.kedudukan === "1" ? "Emas" : r.kedudukan === "2" ? "Perak" : "Gangsa";
+                            return `${medalName} (${ev ? ev.nama : "Acara"})`;
+                        });
+                        plainTextForShare = `Tahniah ${targetData.nama} (Rumah ${targetData.rumah})! Anda telah berjaya memenangi pingat ${medalsShare.join(', ')} di ${activeSchoolSubtitle} ${activeYear}! 🎉`;
                     } else {
                         achievementText = `<p style="font-size: 16px; line-height: 1.6; max-width: 600px; margin: 0 auto 25px auto;">Telah mempamerkan semangat kesukanan yang tinggi dan mengambil bahagian dengan cemerlang.</p>`;
                     }
+                    
+                    setShareText(plainTextForShare);
 
                     printContent = `
                         <div style="border: 12px double #1e3a8a; padding: 35px; text-align: center; font-family: 'Playfair Display', serif; min-height: 240mm; box-sizing: border-box; position: relative;">
@@ -1600,17 +1612,22 @@
                                                         statusText = "Hari Ini";
                                                         statusColor = "bg-amber-100 text-amber-700 animate-pulse";
                                                     }
-                                                    
+
                                                     return (
-                                                        <div key={ev.id} className="p-3 bg-slate-50 rounded-xl border hover:bg-slate-100 transition flex flex-col gap-1.5 shadow-sm">
+                                                        <div key={ev.id} className="border-l-2 border-indigo-400 pl-3 py-1">
                                                             <div className="flex justify-between items-start">
-                                                                <span className="font-bold text-indigo-700 text-[11px] bg-indigo-50 px-2 py-0.5 rounded">{ev.masa || "TBA"} ({formatDateToDMY(ev.tarikh)})</span>
-                                                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusColor}`}>
+                                                                <p className="font-bold text-[11px] text-indigo-900 leading-tight">
+                                                                    <span className="text-[9px] text-slate-500 mr-1">[{ev.kodAcara}]</span>
+                                                                    {ev.nama}
+                                                                </p>
+                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded ml-2 whitespace-nowrap ${statusColor}`}>
                                                                     {statusText}
                                                                 </span>
                                                             </div>
-                                                            <p className="font-extrabold text-slate-800 uppercase leading-tight">[{ev.kodAcara}] {ev.nama}</p>
-                                                            <p className="text-[10px] text-slate-500 font-semibold">{ev.kategori} • {ev.jenis}</p>
+                                                            <div className="flex justify-between items-center mt-1">
+                                                                <p className="text-[10px] font-medium text-slate-600">{ev.kategori}</p>
+                                                                <p className="text-[9px] text-slate-400 font-mono">{formatDateToDMY(ev.tarikh)} {ev.masa}</p>
+                                                            </div>
                                                         </div>
                                                     );
                                                 })
@@ -1619,15 +1636,63 @@
                                     </div>
 
                                     <div className="bg-white p-5 border rounded-2xl h-[400px] flex flex-col shadow-sm">
-                                        <h3 className="font-bold border-b pb-2 mb-3 shrink-0">📈 Log Aktiviti</h3>
-                                        <div className="overflow-y-auto space-y-2 pr-2 text-xs flex-1">
-                                            {logs.map(l => (
-                                                <div key={l.id} className="p-2.5 bg-slate-50 rounded-lg border hover:bg-slate-100 transition">
-                                                    <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-1"><span>{l.userName}</span><span>{l.timestamp}</span></div>
-                                                    <p className="font-bold text-slate-700">{l.action}</p><p className="text-slate-500">{l.details}</p>
+                                        <div className="flex justify-between items-center border-b pb-2 mb-3 shrink-0">
+                                            <h3 className="font-bold">🏅 Pencapaian Terbaik</h3>
+                                        </div>
+                                        <div className="overflow-y-auto space-y-4 pr-2 flex-1">
+                                            <div>
+                                                <div className="flex justify-between items-center bg-indigo-50 px-2 py-1 rounded mb-2">
+                                                    <h4 className="text-xs font-bold text-indigo-800">Olahragawan</h4>
+                                                    <select 
+                                                        value={bestAthleteMaleCat} 
+                                                        onChange={(e) => setBestAthleteMaleCat(e.target.value)}
+                                                        className="text-[10px] p-1 border rounded bg-white"
+                                                    >
+                                                        {categories.filter(c => !c.toUpperCase().startsWith('P')).map(c => <option key={c} value={c}>{c}</option>)}
+                                                    </select>
                                                 </div>
-                                            ))}
-                                            {logs.length === 0 && <p className="text-slate-400 italic text-center pt-4">Tiada rekod log aktiviti.</p>}
+                                                <div className="space-y-2">
+                                                    {calculateBest("Lelaki", bestAthleteMaleCat).slice(0,3).map((ath, idx) => (
+                                                        <div key={ath.id} className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg text-xs">
+                                                            <div className={`w-6 h-6 flex items-center justify-center rounded-full text-white font-bold text-[10px] ${idx===0 ? 'bg-yellow-400' : idx===1 ? 'bg-slate-400' : 'bg-amber-600'}`}>
+                                                                {idx+1}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className="font-bold leading-tight">{ath.nama}</p>
+                                                                <p className="text-[9px] text-slate-500">Rumah {ath.rumah} | {ath.g}E {ath.s}P {ath.b}G</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {calculateBest("Lelaki", bestAthleteMaleCat).length === 0 && <p className="text-[10px] text-slate-400 italic text-center">Tiada data</p>}
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <div className="flex justify-between items-center bg-pink-50 px-2 py-1 rounded mb-2">
+                                                    <h4 className="text-xs font-bold text-pink-800">Olahragawati</h4>
+                                                    <select 
+                                                        value={bestAthleteFemaleCat} 
+                                                        onChange={(e) => setBestAthleteFemaleCat(e.target.value)}
+                                                        className="text-[10px] p-1 border rounded bg-white"
+                                                    >
+                                                        {categories.filter(c => !c.toUpperCase().startsWith('L')).map(c => <option key={c} value={c}>{c}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {calculateBest("Perempuan", bestAthleteFemaleCat).slice(0,3).map((ath, idx) => (
+                                                        <div key={ath.id} className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg text-xs">
+                                                            <div className={`w-6 h-6 flex items-center justify-center rounded-full text-white font-bold text-[10px] ${idx===0 ? 'bg-yellow-400' : idx===1 ? 'bg-slate-400' : 'bg-amber-600'}`}>
+                                                                {idx+1}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className="font-bold leading-tight">{ath.nama}</p>
+                                                                <p className="text-[9px] text-slate-500">Rumah {ath.rumah} | {ath.g}E {ath.s}P {ath.b}G</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {calculateBest("Perempuan", bestAthleteFemaleCat).length === 0 && <p className="text-[10px] text-slate-400 italic text-center">Tiada data</p>}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1636,61 +1701,59 @@
 
                         {}
                         {activeTab === "rumah_sukan" && userRole !== "pelawat" && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-white p-4 border rounded-2xl flex justify-between items-center shadow-sm">
-                                    <div><h3 className="font-bold">Pengurusan Rumah Sukan</h3><p className="text-xs text-slate-400">Kelola slogan, guru penasihat, dan keahlian.</p></div>
-                                    <button onClick={() => { setHouseForm({nama:"", slogan:"", guruPenasihat:"", bonusPoints:0, warnaLabel:"Ungu"}); setIsEditingHouse(false); setIsHouseSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">+ Tambah Rumah</button>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in relative">
+                                <div className="flex justify-between items-center mb-6 pb-4 border-b">
+                                    <h2 className="text-xl font-black text-slate-800">Pengurusan Rumah Sukan</h2>
+                                    {(userRole === "admin" || userRole === "urusetia") && (
+                                        <button onClick={() => { setHouseForm({ nama: "", slogan: "", guruPenasihat: "", bonusPoints: 0, warnaLabel: "Ungu" }); setIsEditingHouse(false); setIsHouseSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition">+ Tambah Rumah Sukan</button>
+                                    )}
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {Object.entries(housesMetadata).map(([name, meta]) => {
-                                        const preset = COLOR_PRESETS[meta.warnaLabel] || COLOR_PRESETS.Merah;
-                                        const advisors = meta.guruPenasihat ? meta.guruPenasihat.split(',').filter(Boolean) : [];
-                                        const hAthletes = athletes.filter(a => a.rumah === name);
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {Object.entries(housesMetadata).map(([nama, data]) => {
+                                        const hAthletes = athletes.filter(a => a.rumah === nama);
+                                        const preset = COLOR_PRESETS[data.warnaLabel || "Merah"];
+                                        const advisors = (data.guruPenasihat || "").split('\n').filter(l => l.trim());
+                                        
                                         return (
-                                            <div key={name} className="bg-white p-5 border rounded-2xl relative overflow-hidden shadow-sm hover:shadow-md transition">
+                                            <div key={nama} className={`border rounded-2xl p-5 relative overflow-hidden transition hover:-translate-y-1 ${preset.glow}`}>
                                                 <div className={`absolute top-0 left-0 w-full h-2 ${preset.warna}`}></div>
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div><h4 className="text-xl font-black">Rumah {name}</h4><p className="text-xs text-indigo-600 font-bold italic">"{meta.slogan}"</p></div>
-                                                    <button onClick={() => { setHouseForm({nama:name, ...meta}); setOriginalHouseKey(name); setIsEditingHouse(true); setIsHouseSidebarOpen(true); }} className="bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Edit</button>
-                                                </div>
-                                                <div className="bg-slate-50 p-3 rounded-xl border text-xs mb-3 space-y-2">
-                                                    <p className="font-bold">Mata Bonus Perbarisan: <span className="text-indigo-600">{meta.bonusPoints}</span></p>
+                                                <div className="flex justify-between items-start mb-4">
                                                     <div>
-                                                        <p className="font-bold text-slate-400 uppercase text-[10px]">Guru Penasihat</p>
-                                                        <div className="flex flex-wrap gap-1.5 mt-1">
-                                                            {advisors.map(adv => (
-                                                                <span key={adv} className="bg-white border px-2 py-1 rounded-md text-[11px] font-bold flex items-center gap-1 shadow-sm">
-                                                                    {adv} <button onClick={() => {
-                                                                        if(!checkAuth()) return;
-                                                                        const updated = {...housesMetadata};
-                                                                        updated[name].guruPenasihat = advisors.filter(a => a !== adv).join(',');
-                                                                        if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('houses').set(updated);
-                                                                        else setHousesMetadata(updated);
-                                                                    }} className="text-red-500 hover:text-red-700 ml-1 font-bold">✕</button>
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                        <div className="flex gap-1 mt-2">
-                                                            <input type="text" value={newAdvisorText[name]||""} onChange={e => setNewAdvisorText({...newAdvisorText, [name]:e.target.value})} placeholder="Tambah nama guru..." className="flex-1 border p-1.5 rounded-lg text-xs" />
-                                                            <button onClick={() => {
-                                                                if(!checkAuth()) return;
-                                                                if(!newAdvisorText[name]) return;
-                                                                const updated = {...housesMetadata};
-                                                                const curr = updated[name].guruPenasihat ? updated[name].guruPenasihat.split(',') : [];
-                                                                curr.push(newAdvisorText[name]); updated[name].guruPenasihat = curr.join(',');
-                                                                if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('houses').set(updated);
-                                                                else setHousesMetadata(updated);
-                                                                setNewAdvisorText({...newAdvisorText, [name]:""});
-                                                            }} className="bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-slate-700 transition">Tambah</button>
-                                                        </div>
+                                                        <h3 className={`text-xl font-black ${preset.text}`}>Rumah {nama}</h3>
+                                                        <p className="text-xs text-slate-500 font-medium italic mt-1">"{data.slogan || 'Tiada Slogan'}"</p>
+                                                    </div>
+                                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg ${preset.bg} ${preset.text} shadow-sm`}>
+                                                        {nama.charAt(0).toUpperCase()}
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2 mt-3">
-                                                    <button onClick={() => { setSelectedMembersHouse(name); setShowMembersModal(true); }} className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-xl font-bold text-xs border border-indigo-100 transition shadow-sm">👥 Kelola Ahli ({hAthletes.length})</button>
-                                                    <button onClick={() => executeBypassPrint('kehadiran_rumah', { houseName: name })} className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 rounded-xl font-bold text-xs border border-emerald-100 transition shadow-sm">🖨️ Cetak Kehadiran</button>
+                                                
+                                                <div className="bg-white/60 p-3 rounded-xl border border-white mb-4 space-y-2">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs font-bold text-slate-600">Jumlah Ahli:</span>
+                                                        <span className="text-sm font-black bg-slate-800 text-white px-2 py-0.5 rounded-lg">{hAthletes.length}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-xs font-bold text-slate-600">Mata Bonus:</span>
+                                                        <span className="text-sm font-black text-emerald-600">+{data.bonusPoints || 0}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mb-4">
+                                                    <h4 className="text-xs font-bold text-slate-700 mb-2 border-b pb-1">Guru Penasihat:</h4>
+                                                    <ul className="text-[11px] space-y-1 text-slate-600 h-16 overflow-y-auto">
+                                                        {advisors.length > 0 ? advisors.map((g, i) => <li key={i} className="flex items-center gap-1">▪️ {g}</li>) : <li className="italic text-slate-400">Belum ditetapkan</li>}
+                                                    </ul>
+                                                </div>
+
+                                                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
+                                                    {(userRole === "admin" || userRole === "urusetia") && (
+                                                        <button onClick={() => { setOriginalHouseKey(nama); setHouseForm({ nama, ...data }); setIsEditingHouse(true); setIsHouseSidebarOpen(true); }} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-bold transition">Kemaskini</button>
+                                                    )}
+                                                    <button onClick={() => { setSelectedMembersHouse(nama); setShowMembersModal(true); }} className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-xl text-xs font-bold transition">Senarai Ahli</button>
+                                                    <button onClick={() => executeBypassPrint('kehadiran_rumah', { houseName: nama })} className="w-10 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center font-bold transition" title="Cetak Borang Kehadiran">🖨️</button>
                                                 </div>
                                             </div>
-                                        )
+                                        );
                                     })}
                                 </div>
                             </div>
@@ -1698,147 +1761,85 @@
 
                         {}
                         {activeTab === "acara" && userRole !== "pelawat" && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-white p-4 border rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
-                                    <div><h3 className="font-bold">Pengurusan Acara Sukan</h3><p className="text-xs text-slate-400">Tetapan Format Individu / Berkumpulan (Relay) & Penjanaan Borang.</p></div>
-                                    <div className="flex flex-wrap w-full md:w-auto gap-2">
-                                        <select value={selectedEventDate} onChange={e => setSelectedEventDate(e.target.value)} className="flex-1 border p-2 rounded-xl text-xs font-bold bg-slate-50">
-                                            <option value="Semua">Semua Hari</option>
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b gap-4">
+                                    <h2 className="text-xl font-black text-slate-800">Pengurusan Acara Sukan</h2>
+                                    <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                                        {(userRole === "admin" || userRole === "urusetia") && (
+                                            <>
+                                                <button onClick={() => {
+                                                    setEventForm({ id: "", noAcara: "", nama: "", kategori: categories[0] || "L12TKB", jenis: "Balapan", format: "Individu", tarikh: "", masa: "" });
+                                                    setIsEditingEvent(false); setIsEventSidebarOpen(true);
+                                                }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">
+                                                    + Tambah Acara
+                                                </button>
+                                                <button onClick={() => executeBypassPrint('semua_keputusan')} className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">
+                                                    🖨️ Cetak Semua Keputusan
+                                                </button>
+                                            </>
+                                        )}
+                                        <select value={selectedEventDate} onChange={(e) => setSelectedEventDate(e.target.value)} className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-indigo-500 outline-none">
+                                            <option value="Semua">Semua Tarikh</option>
                                             {uniqueEventDates.map(d => <option key={d} value={d}>{formatDateToDMY(d)}</option>)}
                                         </select>
-                                        <button onClick={() => { setEventForm({ id:"", noAcara:"", nama:"", kategori:categories[0], jenis:"Balapan", format:"Individu", tarikh:"", masa:"" }); setIsEditingEvent(false); setIsEventSidebarOpen(true); }} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition whitespace-nowrap">+ Daftar Acara</button>
                                     </div>
                                 </div>
-                                <div className="bg-white border rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
-                                    {eventsWithCode.filter(e => selectedEventDate === "Semua" || e.tarikh === selectedEventDate).map(ev => (
-                                        <div key={ev.id} className="bg-slate-50 hover:bg-slate-100 transition border p-4 rounded-xl flex flex-col lg:flex-row justify-between items-start lg:items-center text-xs gap-4">
-                                            <div className="flex gap-3 items-center w-full lg:w-auto">
-                                                <span className="bg-indigo-600 text-white px-3 py-2 rounded-lg font-mono font-bold shadow-sm">{ev.kodAcara}</span>
-                                                <div className="flex-1">
-                                                    <h4 className="font-extrabold uppercase text-sm text-slate-900 leading-tight">{ev.nama} <span className="text-indigo-600">{ev.kategori}</span></h4>
-                                                    <div className="text-slate-500 font-semibold mt-1 flex items-center gap-1.5 flex-wrap">
-                                                        <span>{ev.jenis}</span>
-                                                        <span className="text-[10px]">•</span>
-                                                        <span className={ev.format==="Berkumpulan"?"text-purple-600 font-bold bg-purple-100 px-1.5 py-0.5 rounded":""}>{ev.format}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col lg:items-end gap-3 w-full lg:w-auto pt-3 lg:pt-0 border-t border-slate-200 lg:border-0">
-                                                <div className="flex flex-wrap justify-between lg:justify-end items-center gap-3 w-full">
-                                                    <span className="text-slate-500 bg-white border px-2.5 py-1 rounded-lg shadow-sm whitespace-nowrap text-[10px]">📅 {formatDateToDMY(ev.tarikh)} {ev.masa}</span>
-                                                    <div className="flex gap-2">
-                                                        <button onClick={() => { setEventForm(ev); setIsEditingEvent(true); setIsEventSidebarOpen(true); }} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-1.5 rounded-lg transition shadow-sm font-bold">Edit</button>
-                                                        <button onClick={() => {
-                                                            if(!checkAuth()) return;
-                                                            if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('events').doc(ev.id).delete();
-                                                            else setEvents(events.filter(x => x.id !== ev.id));
-                                                        }} className="text-red-600 bg-red-50 hover:bg-red-100 px-4 py-1.5 rounded-lg transition shadow-sm font-bold">Padam</button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 w-full lg:justify-end">
-                                                    <button onClick={() => {
-                                                        setActiveRegEvent(ev);
-                                                        const initialData = {};
-                                                        athletes.forEach(a => {
-                                                            if (a.acaraIds && a.acaraIds.includes(ev.id)) {
-                                                                initialData[a.id] = { selected: true, pasukan: (a.relayData && a.relayData[ev.id]?.pasukan) || "A", pelari: (a.relayData && a.relayData[ev.id]?.pelari) || "1" };
-                                                            }
-                                                        });
-                                                        setTempRegData(initialData);
-                                                        setRegModalHouseFilter("Semua");
-                                                        setRegModalCategoryFilter("Semua");
-                                                        setIsEventRegModalOpen(true);
-                                                    }} className="flex-1 sm:flex-none bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">👥 Daftar Peserta</button>
-                                                    <button onClick={() => executeBypassPrint('marshall', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-indigo-700 border border-indigo-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ Cetak Marshall</button>
-                                                    {ev.jenis === "Balapan" && <button onClick={() => executeBypassPrint('hakim_penamat', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-rose-700 border border-rose-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ Hakim Penamat</button>}
-                                                    {ev.jenis === "Padang" && (
-                                                        <div className="flex flex-wrap gap-2 flex-1 sm:flex-none">
-                                                            <button onClick={() => executeBypassPrint('hakim_padang', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-emerald-700 border border-emerald-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ Borang Padang</button>
-                                                            {(ev.nama || "").toUpperCase().includes("LOMPAT TINGGI") && (
-                                                                <button onClick={() => executeBypassPrint('hakim_lompat_tinggi', ev)} className="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-teal-700 border border-teal-200 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 font-bold text-[11px] shadow-sm transition whitespace-nowrap">🖨️ L.Tinggi</button>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {eventsWithCode.length === 0 && <p className="text-center text-slate-400 italic py-5">Tiada acara didaftarkan untuk tarikh ini.</p>}
-                                </div>
-                            </div>
-                        )}
-
-                        {}
-                        {activeTab === "atlit" && userRole !== "pelawat" && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-white p-4 border rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-4 shadow-sm">
-                                    <div><h3 className="font-bold">Pengurusan Atlet / Murid</h3><p className="text-xs text-slate-400">Daftar murid dan tetapkan penyertaan acara (Individu & Pasukan).</p></div>
-                                    <div className="flex flex-wrap gap-2 items-center">
-                                        <input type="text" placeholder="Cari Nama Atlet..." value={athleteSearchQuery} onChange={e => setAthleteSearchQuery(e.target.value)} className="border p-2 rounded-xl text-xs font-bold bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-auto min-w-[200px]" />
-                                        <select value={athleteHouseFilter} onChange={e => setAthleteHouseFilter(e.target.value)} className="border p-2 rounded-xl text-xs font-bold bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
-                                            <option value="Semua">Semua Rumah</option>
-                                            {Object.keys(housesMetadata).map(k => <option key={k} value={k}>Rumah {k}</option>)}
-                                        </select>
-                                        <button onClick={() => { setAthleteForm({ id:"", nama:"", kelas:"", rumah:Object.keys(housesMetadata)[0]||"Merah", jantina:"Lelaki", kategori:categories[0] }); setIsEditingAthlete(false); setIsAddAthleteSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow transition">+ Tambah Atlet</button>
-                                    </div>
-                                </div>
-                                <div className="bg-white border rounded-2xl overflow-x-auto shadow-sm">
-                                    <table className="w-full text-left text-xs">
-                                        <thead className="bg-slate-50 border-b">
+                                <div className="overflow-x-auto rounded-xl border">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-slate-100 text-slate-700 uppercase text-xs font-black">
                                             <tr>
-                                                <th className="p-3 text-slate-500 uppercase">No</th>
-                                                <th className="p-3 text-slate-500 uppercase">No. Bib</th>
-                                                <th className="p-3 text-slate-500 uppercase">Nama</th>
-                                                <th className="p-3 text-slate-500 uppercase">Kelas</th>
-                                                <th className="p-3 text-slate-500 uppercase">Kategori</th>
-                                                <th className="p-3 text-slate-500 uppercase">Rumah</th>
-                                                <th className="p-3 text-slate-500 uppercase">Acara Berdaftar</th>
-                                                <th className="p-3 text-slate-500 uppercase text-center">Tindakan</th>
+                                                <th className="px-4 py-3">No</th>
+                                                <th className="px-4 py-3">Kod</th>
+                                                <th className="px-4 py-3">Nama Acara</th>
+                                                <th className="px-4 py-3">Kategori</th>
+                                                <th className="px-4 py-3">Format</th>
+                                                <th className="px-4 py-3">Tarikh/Masa</th>
+                                                <th className="px-4 py-3 text-center">Tindakan</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {athletes && athletes.length > 0 && athletes.filter(a => athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter)
-                                                .filter(a => !athleteSearchQuery || (a.nama && a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase())))
-                                                .map((ath, idx) => (
-                                                <tr key={ath.id} className="border-b font-semibold hover:bg-slate-50 transition">
-                                                    <td className="p-3 text-slate-500">{idx+1}</td>
-                                                    <td className="p-3 font-mono font-bold text-slate-600">{ath.noBib || "-"}</td>
-                                                    <td className="p-3 uppercase text-slate-900">{ath.nama}</td>
-                                                    <td className="p-3">{ath.kelas}</td>
-                                                    <td className="p-3 text-indigo-600 bg-indigo-50 font-bold">{ath.kategori}</td>
-                                                    <td className="p-3"><span className={`px-2 py-1 rounded-md text-[10px] text-white ${COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel || "Merah"]?.warna}`}>{ath.rumah}</span></td>
-                                                    <td className="p-3">
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {ath.acaraIds && ath.acaraIds.length > 0 ? ath.acaraIds.map(id => {
-                                                                const ev = (events||[]).find(e => e.id === id); 
-                                                                if(!ev) return null;
-                                                                const relayInfo = ath.relayData && ath.relayData[id] ? ` (Pskn ${ath.relayData[id].pasukan}-L${ath.relayData[id].pelari})` : "";
-                                                                return <span key={id} className="bg-white text-indigo-700 px-2 py-1 rounded-md text-[10px] border border-indigo-100 shadow-sm">{ev.nama}{relayInfo}</span>;
-                                                            }) : <span className="text-slate-400 italic bg-slate-100 px-2 py-1 rounded-md">Tiada Acara</span>}
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <div className="flex justify-center items-center gap-3">
-                                                            <button onClick={() => { 
-                                                                setSelectedStudentId(ath.id); 
-                                                                setStudentSearchQuery(ath.nama); 
-                                                                setSelectedEventIds(ath.acaraIds||[]); 
-                                                                setSelectedRelayData(ath.relayData||{});
-                                                                setIsAssignEventSidebarOpen(true); 
-                                                            }} className="text-emerald-600 hover:text-emerald-800 hover:scale-110 transition text-sm" title="Tetapan Acara">⏱️</button>
-                                                            <button onClick={() => { setAthleteForm(ath); setIsEditingAthlete(true); setIsAddAthleteSidebarOpen(true); }} className="text-blue-600 hover:text-blue-800 hover:scale-110 transition text-sm" title="Kemaskini Profil">✏️</button>
-                                                            <button onClick={() => {
-                                                                if(!checkAuth()) return;
-                                                                if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id).delete();
-                                                                else setAthletes(athletes.filter(x => x.id !== ath.id));
-                                                            }} className="text-red-500 hover:text-red-700 hover:scale-110 transition text-sm" title="Padam Rekod">✕</button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {(!athletes || athletes.filter(a => athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter)
-                                                     .filter(a => !athleteSearchQuery || (a.nama && a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase()))).length === 0) && (
-                                                <tr><td colSpan="8" className="text-center py-6 text-slate-400 italic">Tiada rekod atlet dijumpai.</td></tr>
+                                            {eventsWithCode.filter(ev => selectedEventDate === "Semua" || ev.tarikh === selectedEventDate).length === 0 ? (
+                                                <tr><td colSpan="7" className="text-center py-8 text-slate-400 italic">Tiada acara didaftarkan untuk tarikh ini.</td></tr>
+                                            ) : (
+                                                eventsWithCode.filter(ev => selectedEventDate === "Semua" || ev.tarikh === selectedEventDate).map((ev, index) => {
+                                                    const isSelesai = results.some(r => r.eventId === ev.id);
+                                                    return (
+                                                        <tr key={ev.id} className="border-b hover:bg-slate-50 transition">
+                                                            <td className="px-4 py-3 font-bold text-slate-400">{index + 1}</td>
+                                                            <td className="px-4 py-3 font-mono font-bold text-indigo-600">{ev.kodAcara}</td>
+                                                            <td className="px-4 py-3 font-bold">{ev.nama} {isSelesai && <span className="ml-2 text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider">Selesai</span>}</td>
+                                                            <td className="px-4 py-3"><span className="bg-slate-200 px-2 py-1 rounded text-xs font-semibold">{ev.kategori}</span></td>
+                                                            <td className="px-4 py-3"><span className={`px-2 py-1 rounded text-xs font-bold ${ev.format==='Berkumpulan' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{ev.format}</span></td>
+                                                            <td className="px-4 py-3 text-xs text-slate-500">{formatDateToDMY(ev.tarikh)} <br/> {ev.masa}</td>
+                                                            <td className="px-4 py-3 text-center space-x-1 whitespace-nowrap">
+                                                                <button onClick={() => { setActiveRegEvent(ev); setRegModalHouseFilter("Semua"); setRegModalCategoryFilter("Semua"); setIsEventRegModalOpen(true); }} className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-2 py-1 rounded text-[10px] font-bold transition">Daftar Atlet</button>
+                                                                <button onClick={() => executeBypassPrint('marshall', ev)} className="bg-amber-50 text-amber-600 hover:bg-amber-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Borang Marshall">BM</button>
+                                                                {ev.jenis === "Balapan" && <button onClick={() => executeBypassPrint('hakim_penamat', ev)} className="bg-pink-50 text-pink-600 hover:bg-pink-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Hakim Penamat">HP</button>}
+                                                                {ev.jenis === "Padang" && (ev.nama.toLowerCase().includes("lompat tinggi") ? 
+                                                                    <button onClick={() => executeBypassPrint('hakim_lompat_tinggi', ev)} className="bg-teal-50 text-teal-600 hover:bg-teal-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Hakim Lompat Tinggi">HLT</button> :
+                                                                    <button onClick={() => executeBypassPrint('hakim_padang', ev)} className="bg-teal-50 text-teal-600 hover:bg-teal-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Hakim Padang">HPdg</button>
+                                                                )}
+                                                                {(userRole === "admin" || userRole === "urusetia") && (
+                                                                    <>
+                                                                        <button onClick={() => { setEventForm(ev); setIsEditingEvent(true); setIsEventSidebarOpen(true); }} className="bg-slate-100 text-slate-600 hover:bg-slate-200 px-2 py-1 rounded text-[10px] font-bold transition">Ubah</button>
+                                                                        <button onClick={() => {
+                                                                            if(!checkAuth()) return;
+                                                                            setConfirmModal({
+                                                                                show: true, title: "Padam Acara", message: `Adakah anda pasti untuk memadam acara ${ev.nama}?`,
+                                                                                onConfirm: () => {
+                                                                                    if (isCloudActive && db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('events').doc(ev.id).delete();
+                                                                                    else setEvents(events.filter(e => e.id !== ev.id));
+                                                                                    setConfirmModal({ show: false, title: "", message: "", onConfirm: null });
+                                                                                    showToastMessage("Acara dipadam.");
+                                                                                }
+                                                                            });
+                                                                        }} className="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded text-[10px] font-bold transition">Padam</button>
+                                                                    </>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
                                             )}
                                         </tbody>
                                     </table>
@@ -1847,1147 +1848,99 @@
                         )}
 
                         {}
-                        {activeTab === "keputusan" && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-white p-5 border rounded-2xl flex flex-wrap justify-between items-end gap-4 shadow-sm">
-                                    <div className="flex-1 min-w-[300px]">
-                                        <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-                                            {userRole === "pelawat" ? "Sila Pilih Acara Untuk Melihat Keputusan" : "Pilih Acara Kejohanan"}
-                                        </label>
-                                        <div className="flex gap-2 items-center">
-                                            <select value={resultForm.eventId} onChange={e => setResultForm({...resultForm, eventId:e.target.value})} className="w-full border p-2.5 rounded-xl bg-slate-50 font-bold text-sm hover:bg-white transition focus:ring-2 focus:ring-indigo-500">
-                                                <option value="">-- Sila Pilih Acara --</option>
-                                                {eventsWithCode.map(ev => <option key={ev.id} value={ev.id}>[{ev.kodAcara}] {ev.nama} Kategori {ev.kategori}</option>)}
-                                            </select>
-                                            
-                                            <div className="flex items-center gap-3">
-                                                <button onClick={() => executeBypassPrint('semua_keputusan')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md whitespace-nowrap transition">🖨️ Cetak Semua Keputusan</button>
-                                            </div>
+                        {activeTab === "atlit" && userRole !== "pelawat" && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in relative">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b gap-4">
+                                    <h2 className="text-xl font-black text-slate-800">Pengurusan Atlet</h2>
+                                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                                        <div className="relative flex-grow md:w-64">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">🔍</span>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Cari nama/kelas/rumah..." 
+                                                value={athleteSearchQuery}
+                                                onChange={(e) => setAthleteSearchQuery(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2 border-2 rounded-xl text-sm font-medium focus:border-indigo-500 outline-none"
+                                            />
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-6">
-                                    <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-                                        <h3 className="font-bold border-b pb-2">🏅 {userRole === "pelawat" ? "Grid Keputusan Peserta" : "Kunci Keputusan Pingat Secara Grid (Inline / Berpusat)"}</h3>
-                                        {!resultForm.eventId ? <p className="text-slate-400 italic bg-slate-50 p-6 rounded-xl text-center text-xs border border-dashed">Sila pilih acara dari dropdown di atas untuk menyenaraikan peserta dan melihat/mengunci keputusan.</p> :
-                                            <form onSubmit={async (e) => {
-                                                e.preventDefault();
-                                                if(!checkAuth()) return;
-                                                const toDelete = results.filter(r => r.eventId === resultForm.eventId);
-                                                
-                                                if (isCloudActive && db) {
-                                                    const batch = db.batch();
-                                                    toDelete.forEach(r => {
-                                                        const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('results').doc(r.id);
-                                                        batch.delete(ref);
-                                                    });
-                                                    Object.entries(gridResults).forEach(([athId, data]) => {
-                                                        if (data.kedudukan && data.kedudukan !== "") {
-                                                            const id = "R_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                                                            const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('results').doc(id);
-                                                            batch.set(ref, { id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan || "-" });
-                                                        }
-                                                    });
-                                                    await batch.commit();
-                                                } else {
-                                                    const newResultsList = results.filter(r => r.eventId !== resultForm.eventId);
-                                                    Object.entries(gridResults).forEach(([athId, data]) => {
-                                                        if (data.kedudukan && data.kedudukan !== "") {
-                                                            const id = "R_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                                                            newResultsList.push({ id, eventId: resultForm.eventId, athleteId: athId, kedudukan: data.kedudukan, catatan: data.catatan || "-" });
-                                                        }
-                                                    });
-                                                    setResults(newResultsList);
-                                                }
-                                                createLog("Kunci Keputusan Pukal", `Mengemaskini grid keputusan untuk acara ${resultForm.eventId}`);
-                                                showToastMessage("Semua keputusan acara berjaya disimpan secara pukal!");
-                                            }} className="space-y-4 text-xs font-bold">
-                                                <div className="overflow-x-auto border rounded-xl">
-                                                    <table className="w-full text-left">
-                                                        <thead className="bg-slate-100 border-b">
-                                                            <tr>
-                                                                <th className="p-3 uppercase text-slate-500">Nama Peserta / Pasukan (Rumah)</th>
-                                                                <th className="p-3 uppercase text-slate-500 w-44">Kedudukan</th>
-                                                                <th className="p-3 uppercase text-slate-500 w-48">Catatan Masa / Jarak</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {(() => {
-                                                                const ev = events.find(e => e.id === resultForm.eventId);
-                                                                let activeEntities = [];
-                                                                if (ev) {
-                                                                    if (ev.format === "Berkumpulan") {
-                                                                        const evAthletes = athletes.filter(a => a.acaraIds && a.acaraIds.includes(ev.id));
-                                                                        const teams = {};
-                                                                        evAthletes.forEach(a => {
-                                                                            const rData = (a.relayData && a.relayData[ev.id]) || { pasukan: "A", pelari: "1" };
-                                                                            const tKey = `TEAM_${a.rumah}_${rData.pasukan}`;
-                                                                            if (!teams[tKey]) teams[tKey] = { id: tKey, nameDisplay: `PASUKAN ${rData.pasukan}`, houseDisplay: a.rumah };
-                                                                        });
-                                                                        activeEntities = Object.values(teams).sort((a,b)=>a.houseDisplay.localeCompare(b.houseDisplay));
-                                                                    } else {
-                                                                        activeEntities = athletes.filter(a => a.acaraIds && a.acaraIds.includes(ev.id)).map(a => ({
-                                                                            id: a.id, nameDisplay: a.nama, houseDisplay: a.rumah
-                                                                        })).sort((a,b)=>a.nameDisplay.localeCompare(b.nameDisplay));
-                                                                    }
-                                                                }
-                                                                if (activeEntities.length === 0) return <tr><td colSpan="3" className="p-4 text-center italic text-slate-400 bg-white">Tiada peserta didaftarkan untuk acara ini.</td></tr>;
-                                                                
-                                                                return activeEntities.map(ent => (
-                                                                    <tr key={ent.id} className="border-b bg-white hover:bg-slate-50 transition">
-                                                                        <td className="p-3">
-                                                                            <span className="block text-slate-900 uppercase font-black text-sm">{ent.nameDisplay}</span>
-                                                                            <span className="text-[10px] text-slate-500 uppercase">Rumah {ent.houseDisplay}</span>
-                                                                        </td>
-                                                                        <td className="p-3">
-                                                                            {userRole === "pelawat" ? (
-                                                                                <span className="inline-block px-3 py-1 bg-slate-100 rounded text-slate-700">{gridResults[ent.id]?.kedudukan || "-"}</span>
-                                                                            ) : (
-                                                                                <select value={gridResults[ent.id]?.kedudukan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { catatan: "" }), kedudukan: e.target.value }}))} className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition">
-                                                                                    <option value="">-- Tiada --</option>
-                                                                                    <option value="1">🥇 1 (Johan)</option>
-                                                                                    <option value="2">🥈 2 (Naib Johan)</option>
-                                                                                    <option value="3">🥉 3 (Ketiga)</option>
-                                                                                    <option value="4">🏅 4 (Keempat)</option>
-                                                                                    <option value="5">5 (Kelima)</option>
-                                                                                    <option value="6">6 (Keenam)</option>
-                                                                                    <option value="7">7 (Ketujuh)</option>
-                                                                                    <option value="8">8 (Kelapan)</option>
-                                                                                </select>
-                                                                            )}
-                                                                        </td>
-                                                                        <td className="p-3">
-                                                                            {userRole === "pelawat" ? (
-                                                                                <span className="inline-block px-3 py-1 font-mono">{gridResults[ent.id]?.catatan || "-"}</span>
-                                                                            ) : (
-                                                                                <input type="text" value={gridResults[ent.id]?.catatan || ""} onChange={e => setGridResults(prev => ({...prev, [ent.id]: { ...(prev[ent.id] || { kedudukan: "" }), catatan: e.target.value }}))} placeholder="Cth: 10.5s atau 4.2m" className="w-full border-2 border-slate-200 p-2 rounded-lg bg-slate-50 focus:border-indigo-500 focus:bg-white outline-none transition" />
-                                                                            )}
-                                                                        </td>
-                                                                    </tr>
-                                                                ));
-                                                            })()}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                {userRole !== "pelawat" && (
-                                                    <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white py-3.5 rounded-xl transition shadow-md text-sm tracking-wide font-black">💾 SIMPAN SEMUA KEPUTUSAN (GRID)</button>
-                                                )}
-                                            </form>
-                                        }
-                                    </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                                    <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-                                        <h3 className="font-bold border-b pb-2 flex items-center gap-2 text-indigo-900">🌟 Carian Olahragawan & Olahragawati</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-2 opacity-20 text-4xl">👨‍👦</div>
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <p className="text-[10px] font-black text-blue-800 uppercase tracking-wider">Olahragawan (Lelaki)</p>
-                                                    <div className="flex gap-1 z-10 relative">
-                                                        <select value={bestAthleteMaleCat} onChange={e=>setBestAthleteMaleCat(e.target.value)} className="border border-blue-200 p-1 rounded-lg text-[10px] font-bold bg-white outline-none focus:ring-1 focus:ring-blue-500">
-                                                            <option value="">-- Kategori --</option>
-                                                            <option value="Keseluruhan">Keseluruhan</option>
-                                                            {categories.filter(c => !c.toUpperCase().startsWith('P')).map(c => <option key={c} value={c}>{c}</option>)}
-                                                        </select>
-                                                        <button onClick={() => setBestMaleResults(bestAthleteMaleCat === "Keseluruhan" ? calculateOverallBest("Lelaki") : calculateBest("Lelaki", bestAthleteMaleCat))} className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
-                                                    </div>
-                                                </div>
-                                                {bestMaleResults && bestMaleResults.length > 0 ? (
-                                                    <div className="relative z-10 space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                                                        {bestMaleResults.map(ath => (
-                                                            <div key={ath.id} className="bg-white/60 p-2.5 rounded-xl border border-white/50 shadow-sm">
-                                                                <p className="font-black text-sm uppercase text-slate-900 leading-tight">{ath.nama}</p>
-                                                                <p className="text-[10px] font-bold text-slate-600 mt-0.5">Rumah {ath.rumah} | Kelas {ath.kelas}</p>
-                                                                <div className="mt-2 flex gap-2 text-[10px] font-bold">
-                                                                    <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">🥇 {ath.g}</span>
-                                                                    <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">🥈 {ath.s}</span>
-                                                                    <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">🥉 {ath.b}</span>
-                                                                    <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">🏅 {ath.k}</span>
-                                                                    <span className="ml-auto bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-black">Pts: {ath.pts}</span>
-                                                                </div>
-                                                                {ath.senaraiAcara && ath.senaraiAcara.length > 0 && (
-                                                                    <div className="mt-2 border-t border-blue-200/50 pt-1.5">
-                                                                        <p className="text-[9px] font-bold text-blue-800 mb-1">Senarai Acara Dimasuki & Pingat:</p>
-                                                                        <ul className="text-[9px] text-slate-700 space-y-0.5 ml-3 list-disc">
-                                                                            {ath.senaraiAcara.sort((a,b)=>a.kedudukan-b.kedudukan).map((ac, idx) => (
-                                                                                <li key={idx}><span className="font-bold">{ac.pingat}</span> - {ac.namaAcara} {ac.kategori}</li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded font-semibold mt-2 relative z-10">{!bestAthleteMaleCat ? "Pilih kategori & tekan Cari." : "Belum ada rekod / Tiada pemenang."}</p>}
-                                            </div>
-                                            <div className="bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-2 opacity-20 text-4xl">👩‍👧</div>
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <p className="text-[10px] font-black text-pink-800 uppercase tracking-wider">Olahragawati (Perempuan)</p>
-                                                    <div className="flex gap-1 z-10 relative">
-                                                        <select value={bestAthleteFemaleCat} onChange={e=>setBestAthleteFemaleCat(e.target.value)} className="border border-pink-200 p-1 rounded-lg text-[10px] font-bold bg-white outline-none focus:ring-1 focus:ring-pink-500">
-                                                            <option value="">-- Kategori --</option>
-                                                            <option value="Keseluruhan">Keseluruhan</option>
-                                                            {categories.filter(c => !c.toUpperCase().startsWith('L')).map(c => <option key={c} value={c}>{c}</option>)}
-                                                        </select>
-                                                        <button onClick={() => setBestFemaleResults(bestAthleteFemaleCat === "Keseluruhan" ? calculateOverallBest("Perempuan") : calculateBest("Perempuan", bestAthleteFemaleCat))} className="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
-                                                    </div>
-                                                </div>
-                                                {bestFemaleResults && bestFemaleResults.length > 0 ? (
-                                                    <div className="relative z-10 space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                                                        {bestFemaleResults.map(ath => (
-                                                            <div key={ath.id} className="bg-white/60 p-2.5 rounded-xl border border-white/50 shadow-sm">
-                                                                <p className="font-black text-sm uppercase text-slate-900 leading-tight">{ath.nama}</p>
-                                                                <p className="text-[10px] font-bold text-slate-600 mt-0.5">Rumah {ath.rumah} | Kelas {ath.kelas}</p>
-                                                                <div className="mt-2 flex gap-2 text-[10px] font-bold">
-                                                                    <span className="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">🥇 {ath.g}</span>
-                                                                    <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">🥈 {ath.s}</span>
-                                                                    <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">🥉 {ath.b}</span>
-                                                                    <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">🏅 {ath.k}</span>
-                                                                    <span className="ml-auto bg-pink-100 text-pink-800 px-1.5 py-0.5 rounded font-black">Pts: {ath.pts}</span>
-                                                                </div>
-                                                                {ath.senaraiAcara && ath.senaraiAcara.length > 0 && (
-                                                                    <div className="mt-2 border-t border-pink-200/50 pt-1.5">
-                                                                        <p className="text-[9px] font-bold text-pink-800 mb-1">Senarai Acara Dimasuki & Pingat:</p>
-                                                                        <ul className="text-[9px] text-slate-700 space-y-0.5 ml-3 list-disc">
-                                                                            {ath.senaraiAcara.sort((a,b)=>a.kedudukan-b.kedudukan).map((ac, idx) => (
-                                                                                <li key={idx}><span className="font-bold">{ac.pingat}</span> - {ac.namaAcara} {ac.kategori}</li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : <p className="text-xs text-slate-500 italic bg-white/50 p-2 rounded font-semibold mt-2 relative z-10">{!bestAthleteFemaleCat ? "Pilih kategori & tekan Cari." : "Belum ada rekod / Tiada pemenang."}</p>}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white border rounded-2xl p-5 shadow-sm flex flex-col">
-                                        <div className="flex justify-between items-center border-b pb-2 mb-3">
-                                            <h3 className="font-bold flex items-center gap-2 text-amber-800">🏆 Arkib Rekod Kejohanan</h3>
-                                            {userRole !== "pelawat" && <button onClick={()=>{setRecordForm({id:"", acara:"", kategori:categories[0]||"", catatan:"", nama:"", tahun:activeYear}); setShowRecordForm(true);}} className="bg-amber-500 hover:bg-amber-600 transition text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">+ Rekod Baharu</button>}
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto max-h-[300px] space-y-2 text-xs pr-1">
-                                            {records.length === 0 ? <p className="text-slate-400 italic bg-slate-50 p-4 rounded-xl text-center">Tiada data rekod kejohanan dijumpai.</p> : 
-                                                records.sort((a,b)=>b.tahun.localeCompare(a.tahun)).map(rec => (
-                                                    <div key={rec.id} className="bg-gradient-to-r from-amber-50 to-white border border-amber-100 p-3 rounded-xl flex justify-between items-center shadow-sm hover:shadow transition">
-                                                        <div>
-                                                            <p className="font-extrabold text-amber-900 uppercase text-sm mb-1">{rec.acara} <span className="text-slate-600 text-[10px]">({rec.kategori})</span></p>
-                                                            <div className="flex items-center gap-2 text-[11px] font-semibold">
-                                                                <span className="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-mono shadow-sm">{rec.catatan}</span>
-                                                                <span className="text-slate-700 uppercase">{rec.nama}</span>
-                                                                <span className="text-slate-400">[{rec.tahun}]</span>
-                                                            </div>
-                                                        </div>
-                                                        {userRole !== "pelawat" && (
-                                                            <button onClick={()=>{
-                                                                if(!checkAuth()) return;
-                                                                if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('records').doc(rec.id).delete();
-                                                                else setRecords(records.filter(x=>x.id!==rec.id));
-                                                            }} className="text-red-500 hover:scale-110 transition text-sm font-bold p-2 bg-white rounded-lg shadow-sm border border-red-100">✕</button>
-                                                        )}
-                                                    </div>
-                                                ))
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {}
-                        {activeTab === "pasca_sukan" && userRole !== "pelawat" && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-white p-6 border rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-                                    <div><h3 className="text-lg font-black text-slate-900">Modul Dokumentasi</h3><p className="text-xs text-slate-400">Jana laporan rumah sukan (Kokum) dan Sijil Penyertaan.</p></div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setShowSignatoryModal(true)} className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition">✍️ Penandatangan Sijil & Laporan</button>
-                                        <button onClick={() => executeBypassPrint('kokum')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition">📊 Cetak Laporan Kokum</button>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white p-6 border rounded-2xl shadow-sm">
-                                    <h3 className="font-bold mb-3 uppercase text-sm">📜 Penjana Sijil Pintar (Carian & Tapisan)</h3>
-                                    <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                                        <input type="text" placeholder="Taip nama penuh atlet..." value={certSearchQuery} onChange={e => setCertSearchQuery(e.target.value)} className="flex-1 border-2 border-slate-200 focus:border-indigo-500 p-3 rounded-xl text-xs font-bold bg-slate-50 hover:bg-white transition outline-none" />
-                                        <select value={certHouseFilter} onChange={e => setCertHouseFilter(e.target.value)} className="border-2 border-slate-200 p-3 rounded-xl text-xs font-bold bg-slate-50 outline-none">
+                                        <select value={athleteHouseFilter} onChange={(e) => setAthleteHouseFilter(e.target.value)} className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 outline-none">
                                             <option value="Semua">Semua Rumah</option>
-                                            {Object.keys(housesMetadata).map(k => <option key={k} value={k}>Rumah {k}</option>)}
+                                            {Object.keys(housesMetadata).map(h => <option key={h} value={h}>{h}</option>)}
                                         </select>
-                                        <select value={certEventFilter} onChange={e => setCertEventFilter(e.target.value)} className="border-2 border-slate-200 p-3 rounded-xl text-xs font-bold bg-slate-50 outline-none">
-                                            <option value="Semua">Semua Acara</option>
-                                            {eventsWithCode.map(ev => <option key={ev.id} value={ev.id}>[{ev.kodAcara}] {ev.nama}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="max-h-72 overflow-y-auto space-y-2 pr-2">
-                                        {athletes.filter(a => {
-                                            if (!a.nama || a.nama.trim() === "") return false;
-                                            const mSearch = !certSearchQuery || (a.nama||"").toLowerCase().includes(certSearchQuery.toLowerCase());
-                                            const mHouse = certHouseFilter === "Semua" || a.rumah === certHouseFilter;
-                                            let mEvent = true;
-                                            if (certEventFilter !== "Semua") {
-                                                const reg = a.acaraIds && a.acaraIds.includes(certEventFilter);
-                                                const won = (results || []).some(r => {
-                                                    if (r.eventId !== certEventFilter) return false;
-                                                    if (r.athleteId === a.id) return true;
-                                                    if (r.athleteId && r.athleteId.startsWith("TEAM_")) {
-                                                        const parts = r.athleteId.split('_');
-                                                        if (a.rumah === parts[1] && a.acaraIds && a.acaraIds.includes(certEventFilter)) {
-                                                            const rData = (a.relayData && a.relayData[certEventFilter]) || { pasukan: "A", pelari: "1" };
-                                                            if (rData.pasukan === parts[2]) return true;
-                                                        }
-                                                    }
-                                                    return false;
-                                                });
-                                                mEvent = reg || won;
-                                            }
-                                            return mSearch && mHouse && mEvent;
-                                        }).sort((a,b) => (a.rumah || "").localeCompare(b.rumah || "") || (a.kelas || "").localeCompare(b.kelas || "") || (a.nama || "").localeCompare(b.nama || "")).map(ath => (
-                                            <div key={ath.id} className="bg-slate-50 border p-3 rounded-xl flex justify-between items-center text-xs shadow-sm hover:shadow transition">
-                                                <div><p className="font-extrabold uppercase text-sm">{ath.nama}</p><p className="text-[10px] text-slate-500 font-semibold mt-1">Rumah {ath.rumah} | Kelas {ath.kelas}</p></div>
-                                                <button onClick={() => executeBypassPrint('sijil', ath)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition whitespace-nowrap">Cetak Sijil</button>
-                                            </div>
-                                        ))}
-                                        {athletes.filter(a => {
-                                            if (!a.nama || a.nama.trim() === "") return false;
-                                            const mSearch = !certSearchQuery || (a.nama||"").toLowerCase().includes(certSearchQuery.toLowerCase());
-                                            const mHouse = certHouseFilter === "Semua" || a.rumah === certHouseFilter;
-                                            let mEvent = true;
-                                            if (certEventFilter !== "Semua") {
-                                                const reg = a.acaraIds && a.acaraIds.includes(certEventFilter);
-                                                const won = (results || []).some(r => {
-                                                    if (r.eventId !== certEventFilter) return false;
-                                                    if (r.athleteId === a.id) return true;
-                                                    if (r.athleteId && r.athleteId.startsWith("TEAM_")) {
-                                                        const parts = r.athleteId.split('_');
-                                                        if (a.rumah === parts[1] && a.relayData && a.relayData[certEventFilter] && a.relayData[certEventFilter].pasukan === parts[2]) return true;
-                                                    }
-                                                    return false;
-                                                });
-                                                mEvent = reg || won;
-                                            }
-                                            return mSearch && mHouse && mEvent;
-                                        }).length === 0 && <p className="text-center text-slate-400 italic py-4">Tiada rekod dijumpai bagi carian/tapisan tersebut.</p>}
+                                        {(userRole === "admin" || userRole === "urusetia") && (
+                                            <>
+                                                <button onClick={() => { setAthleteForm({ id: "", nama: "", kelas: "", rumah: Object.keys(housesMetadata)[0]||"Merah", jantina: "Lelaki", kategori: categories[0] || "L12TKB" }); setIsEditingAthlete(false); setIsAddAthleteSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">+ Atlet</button>
+                                                <button onClick={() => setIsBulkModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">📥 Import Pukal</button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {}
-                        {activeTab === "ramalan" && userRole === "admin" && predictions && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="bg-gradient-to-r from-purple-800 to-indigo-900 text-white p-6 border rounded-2xl shadow-lg relative overflow-hidden">
-                                    <div className="absolute -right-10 -top-10 text-9xl opacity-10">🔮</div>
-                                    <h3 className="text-xl font-black mb-1 relative z-10">Ramalan Tahun Hadapan ({predictions.year})</h3>
-                                    <p className="text-xs text-purple-200 relative z-10 max-w-2xl">Modul ini menjana ramalan pencapaian rumah sukan secara auto-penggantian. Sistem mengeluarkan murid Tahun 6 / Kategori 12 (yang diandaikan tamat persekolahan) daripada rekod acara, menaikkan kedudukan pemenang di bawahnya (contoh: Naib Johan naik ke Johan), dan mengira semula jumlah kutipan pingat.</p>
-                                </div>
-
-                                <h3 className="font-black text-slate-800 border-b-2 border-slate-200 pb-2">Ramalan Pungutan Pingat Keseluruhan</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    {predictions.houses.map((h, i) => (
-                                        <div key={h.nama} className={`bg-white border p-4 rounded-2xl relative overflow-hidden transition-all duration-300 ${h.glow}`}>
-                                            <div className={`absolute top-0 left-0 w-full h-1.5 ${h.warna}`}></div>
-                                            <div className="flex justify-between items-start">
-                                                <div><span className="text-[10px] font-bold text-slate-400 uppercase">Kedudukan #{i+1}</span><h3 className="font-black text-lg">Rumah {h.nama}</h3></div>
-                                                <span className={`text-2xl font-black ${h.teks}`}>{h.mata}</span>
-                                            </div>
-                                            <div className="grid grid-cols-4 gap-2 mt-4 text-center text-xs font-bold bg-slate-50 p-3 rounded-xl items-end">
-                                                <div><span className="text-2xl block mb-1 drop-shadow-sm">🥇</span>{h.emas}</div>
-                                                <div><span className="text-2xl block mb-1 drop-shadow-sm">🥈</span>{h.perak}</div>
-                                                <div><span className="text-2xl block mb-1 drop-shadow-sm">🥉</span>{h.gangsa}</div>
-                                                <div><span className="text-2xl block mb-1 drop-shadow-sm">🏅</span>{h.keempat}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <h3 className="font-black text-slate-800 border-b-2 border-slate-200 pb-2 mt-8">Ramalan Pemenang Mengikut Acara</h3>
-                                <div className="bg-white border rounded-2xl p-5 shadow-sm">
-                                    {predictions.events.length === 0 ? <p className="text-center text-slate-500 italic py-4">Tiada data ramalan mencukupi.</p> : 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {predictions.events.map(evData => (
-                                            <div key={evData.event.id} className="bg-slate-50 border p-4 rounded-xl shadow-sm hover:shadow transition relative overflow-hidden">
-                                                <div className="border-b pb-2 mb-3">
-                                                    <p className="font-extrabold text-sm uppercase text-slate-900 leading-tight">[{evData.event.kodAcara}] {evData.event.nama}</p>
-                                                    <p className="text-[10px] text-indigo-600 font-bold">{evData.event.kategori} | {evData.event.jenis} | {evData.event.format}</p>
-                                                </div>
-                                                <div className="space-y-2 text-xs">
-                                                    {evData.winners.map(w => {
-                                                        const medal = w.predictedRank === "1" ? "🥇 Emas" : w.predictedRank === "2" ? "🥈 Perak" : w.predictedRank === "3" ? "🥉 Gangsa" : "🏅 Ke-4";
-                                                        return (
-                                                            <div key={w.name + w.house} className="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-100">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="font-bold text-slate-500 w-16 text-[10px] uppercase">{medal}</span>
-                                                                    <div className="flex flex-col">
-                                                                        <span className="font-bold text-slate-800 uppercase text-[11px]">{w.name}</span>
-                                                                        <span className="text-[9px] text-slate-400">Naik dari Tempat ke-{w.originalRank}</span>
-                                                                    </div>
-                                                                </div>
-                                                                <span className="font-bold text-indigo-700 text-[10px] uppercase bg-indigo-50 px-1.5 py-0.5 rounded">{w.house}</span>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    }
+                                <div className="overflow-x-auto rounded-xl border">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-slate-100 text-slate-700 uppercase text-xs font-black">
+                                            <tr>
+                                                <th className="px-4 py-3">No</th>
+                                                <th className="px-4 py-3">Nama Atlet</th>
+                                                <th className="px-4 py-3">Kelas / Tahun</th>
+                                                <th className="px-4 py-3">Rumah</th>
+                                                <th className="px-4 py-3">Kategori</th>
+                                                <th className="px-4 py-3 text-center">Tindakan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {athletes.filter(a => {
+                                                const matchQ = a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.kelas.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.rumah.toLowerCase().includes(athleteSearchQuery.toLowerCase());
+                                                const matchH = athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter;
+                                                return matchQ && matchH;
+                                            }).length === 0 ? (
+                                                <tr><td colSpan="6" className="text-center py-8 text-slate-400 italic">Tiada atlet dijumpai.</td></tr>
+                                            ) : (
+                                                athletes.filter(a => {
+                                                    const matchQ = a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.kelas.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.rumah.toLowerCase().includes(athleteSearchQuery.toLowerCase());
+                                                    const matchH = athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter;
+                                                    return matchQ && matchH;
+                                                }).map((ath, idx) => (
+                                                    <tr key={ath.id} className="border-b hover:bg-slate-50 transition">
+                                                        <td className="px-4 py-3 font-bold text-slate-400">{idx + 1}</td>
+                                                        <td className="px-4 py-3 font-bold">{ath.nama} <span className="text-[10px] text-slate-400 font-normal ml-1">({ath.jantina})</span></td>
+                                                        <td className="px-4 py-3 text-slate-600">{ath.kelas}</td>
+                                                        <td className="px-4 py-3"><span className={`px-2 py-1 rounded text-[10px] font-bold ${(COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel] || COLOR_PRESETS.Merah).bg} ${(COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel] || COLOR_PRESETS.Merah).text}`}>{ath.rumah}</span></td>
+                                                        <td className="px-4 py-3"><span className="bg-slate-200 px-2 py-1 rounded text-xs font-semibold">{ath.kategori}</span></td>
+                                                        <td className="px-4 py-3 text-center space-x-2 whitespace-nowrap">
+                                                            {(userRole === "admin" || userRole === "urusetia") && (
+                                                                <>
+                                                                    <button onClick={() => { setAthleteForm(ath); setIsEditingAthlete(true); setIsAddAthleteSidebarOpen(true); }} className="bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Ubah</button>
+                                                                    <button onClick={() => {
+                                                                        if(!checkAuth()) return;
+                                                                        setConfirmModal({
+                                                                            show: true, title: "Padam Atlet", message: `Padam ${ath.nama}?`,
+                                                                            onConfirm: () => {
+                                                                                if (isCloudActive && db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id).delete();
+                                                                                else setAthletes(athletes.filter(a => a.id !== ath.id));
+                                                                                setConfirmModal({ show: false, title: "", message: "", onConfirm: null });
+                                                                                showToastMessage("Atlet dipadam.");
+                                                                            }
+                                                                        });
+                                                                    }} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">Padam</button>
+                                                                </>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         )}
                     </main>
 
-                    {}
-                    {isBulkModalOpen && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[10000] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in text-xs font-semibold">
-                            <div className="bg-white rounded-2xl w-full max-w-xl p-6 space-y-4 shadow-2xl flex flex-col">
-                                <div className="flex justify-between items-center border-b pb-2">
-                                    <h3 className="font-black text-sm uppercase text-slate-900">📂 Import Pukal Atlet (Bulk Insert)</h3>
-                                    <button onClick={() => setIsBulkModalOpen(false)} className="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
-                                </div>
-                                <p className="text-[11px] text-slate-500 leading-relaxed">
-                                    Salin dan tampal (paste) senarai nama murid di bawah. Anda boleh masukkan mengikut format: <br/>
-                                    <code>Nama Penuh | Kelas | Jantina (L/P) | Kategori (Cth: L12TKB) | Rumah Sukan (Opsyenal)</code><br/>
-                                    <i>(Satu baris untuk setiap seorang murid. Kolum Rumah Sukan akan diutamakan, jika tiada, rumah lalai di bawah akan digunakan).</i>
-                                </p>
-                                <div>
-                                    <label className="block mb-1 text-slate-700 font-bold">Rumah Sukan Lalai (Jika tidak dinyatakan dalam jadual):</label>
-                                    <select value={bulkHouse} onChange={e => setBulkHouse(e.target.value)} className="w-full border-2 border-slate-200 p-2.5 rounded-xl font-bold bg-slate-50">
-                                        {Object.keys(housesMetadata).map(h => <option key={h} value={h}>Rumah {h}</option>)}
-                                    </select>
-                                </div>
-                                <form onSubmit={handleBulkImportSubmit} className="space-y-3">
-                                    <div>
-                                        <label className="block mb-1 text-slate-700 font-bold">Senarai Nama Murid (Salin & Tampal dari Excel/Word):</label>
-                                        <textarea required rows="8" value={bulkText} onChange={e => setBulkText(e.target.value)} placeholder={`Ahmad bin Ali | 6 Amanah | Lelaki | L12TKB | Merah\nSiti binti Abu | 5 Cerdas | Perempuan | P12TKB | Biru\nDanial Hakim | 4 Bijak | L | L10TKB`} className="w-full border-2 border-slate-200 p-3 rounded-xl font-mono text-[11px] bg-slate-50 focus:bg-white focus:border-indigo-500 transition outline-none"></textarea>
-                                    </div>
-                                    <div className="flex justify-end gap-2 pt-2">
-                                        <button type="button" onClick={() => setIsBulkModalOpen(false)} className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold transition">Batal</button>
-                                        <button type="submit" className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-md transition">Proses & Masukkan Atlet</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {isLoginModalOpen && (
-                        <div className="fixed inset-0 bg-slate-900/75 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl w-full max-w-sm p-8 space-y-5 shadow-2xl">
-                                <h3 className="font-black text-center text-xl text-slate-900">Log Masuk Sistem</h3>
-                                <button onClick={() => { auth?.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(()=>setIsLoginModalOpen(false)).catch(e=>showToastMessage(e.message,"error")); }} className="w-full border-2 border-slate-200 p-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 text-xs transition shadow-sm">
-                                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" className="w-4 h-4"/> Log Masuk DELIMa
-                                </button>
-                                <div className="relative flex items-center py-2">
-                                    <div className="flex-grow border-t border-slate-200"></div>
-                                    <span className="flex-shrink-0 mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Akses Pentadbiran</span>
-                                    <div className="flex-grow border-t border-slate-200"></div>
-                                </div>
-                                <input type="password" value={passcodeInput} onChange={e => setPasscodeInput(e.target.value)} placeholder="Kata Laluan" className="w-full border-2 border-slate-200 p-3 rounded-xl text-center text-sm font-mono font-bold bg-slate-50 focus:bg-white focus:border-indigo-500 transition outline-none tracking-widest" />
-                                <div className="flex gap-3 pt-2">
-                                    <button onClick={() => setIsLoginModalOpen(false)} className="flex-1 bg-slate-200 hover:bg-slate-300 py-3 rounded-xl text-xs font-bold transition">Batal</button>
-                                    <button onClick={() => {
-                                        if(passcodeInput.trim() === "ADMIN7608") { localStorage.setItem('sps_local_role','admin'); setUserRole('admin'); setIsLoginModalOpen(false); setPasscodeInput(""); showToastMessage("Berjaya Log Masuk Sebagai Pentadbir (Admin)"); }
-                                        else if(passcodeInput.trim() === "URUS7608") { localStorage.setItem('sps_local_role','urusetia'); setUserRole('urusetia'); setIsLoginModalOpen(false); setPasscodeInput(""); showToastMessage("Berjaya Log Masuk Sebagai Urusetia"); }
-                                        else showToastMessage("Kod laluan tidak sah!","error");
-                                    }} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-bold shadow-md transition">Log Masuk</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {showLockModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-red-700 border-b pb-2">🔒 Tetapan Kunci Sistem</h3>
-                                <p className="text-[11px] text-slate-500 leading-relaxed">Fungsi ini akan mengunci seluruh sistem menjadikannya <strong>Read-Only</strong> (Baca sahaja). Tiada perubahan data boleh dilakukan. Anda boleh menguncinya terus atau tetapkan auto-kunci mengikut tarikh dan masa.</p>
-                                
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                                    <div>
-                                        <label className="block mb-1 text-[10px] text-slate-500 uppercase">Tarikh & Masa Auto-Kunci</label>
-                                        <input type="datetime-local" value={lockConfig.autoLockDate || ""} onChange={e => setLockConfig({...lockConfig, autoLockDate: e.target.value})} className="w-full border p-2 rounded-xl bg-white focus:outline-none focus:border-indigo-500 font-bold" />
-                                        <p className="text-[9px] text-slate-400 mt-1 italic">*Biarkan kosong jika tidak mahu auto-kunci.</p>
-                                    </div>
-                                    <div className="flex items-center gap-2 pt-2 border-t">
-                                        <input type="checkbox" checked={lockConfig.isLocked} onChange={e => setLockConfig({...lockConfig, isLocked: e.target.checked})} className="w-4 h-4 cursor-pointer text-red-600 rounded" />
-                                        <span className="text-red-700 font-bold uppercase">Kunci Sistem Sekarang (Manual)</span>
-                                    </div>
-                                </div>
-                                <div className="flex justify-end gap-2 pt-2">
-                                    <button onClick={() => setShowLockModal(false)} className="px-5 py-2.5 bg-slate-200 rounded-xl font-bold">Batal</button>
-                                    <button onClick={async () => {
-                                        if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('systemLock').set(lockConfig);
-                                        setShowLockModal(false); showToastMessage("Tetapan sistem kunci disimpan.");
-                                    }} className="px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold shadow-md">Simpan Tetapan Kunci</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {isHouseSidebarOpen && (
-                        <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
-                            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsHouseSidebarOpen(false)}></div>
-                            <div className="relative w-full max-w-md bg-white p-6 h-full flex flex-col space-y-4 shadow-2xl animate-slide-in">
-                                <h3 className="font-black text-sm uppercase text-slate-900">{isEditingHouse ? "Edit Rumah Sukan" : "Tambah Rumah Sukan"}</h3>
-                                <form onSubmit={handleHouseSubmit} className="space-y-4 font-semibold">
-                                    <div><label className="block mb-1">Nama Rumah</label><input required disabled={isEditingHouse} type="text" value={houseForm.nama} onChange={e=>setHouseForm({...houseForm, nama:e.target.value})} className="w-full border p-2 rounded-xl disabled:bg-slate-100 uppercase" /></div>
-                                    <div><label className="block mb-1">Slogan</label><input required type="text" value={houseForm.slogan} onChange={e=>setHouseForm({...houseForm, slogan:e.target.value})} className="w-full border p-2 rounded-xl" /></div>
-                                    <div><label className="block mb-1">Warna Label</label><select value={houseForm.warnaLabel} onChange={e=>setHouseForm({...houseForm, warnaLabel:e.target.value})} className="w-full border p-2 rounded-xl">{Object.keys(COLOR_PRESETS).map(k=><option key={k} value={k}>{k}</option>)}</select></div>
-                                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 transition text-white py-2.5 rounded-xl shadow-md mt-4">Simpan Maklumat Rumah</button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showMembersModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 text-xs font-semibold backdrop-blur-sm">
-                            <div className="bg-white rounded-2xl w-full max-w-4xl flex flex-col h-[85vh] shadow-2xl overflow-hidden animate-fade-in">
-                                <div className="bg-indigo-900 text-white p-4 flex justify-between items-center">
-                                    <h3 className="font-bold text-sm uppercase tracking-wide">👥 Pengurusan Keahlian Rumah {selectedMembersHouse}</h3>
-                                    <button onClick={()=>setShowMembersModal(false)} className="text-slate-300 hover:text-white text-lg hover:scale-110 transition">✕</button>
-                                </div>
-                                <div className="p-4 border-b bg-slate-50 flex flex-col sm:flex-row gap-3 shadow-inner">
-                                    <span className="py-1.5 font-bold text-indigo-900">Tambah Ahli Baru Segera:</span>
-                                    <form onSubmit={e => {
-                                        e.preventDefault(); 
-                                        if(!checkAuth()) return;
-                                        const id = "A_"+Date.now();
-                                        const formEle = e.target;
-                                        const ath = { id, nama: formEle.nama.value.toUpperCase(), kelas: formEle.kelas.value, rumah: selectedMembersHouse, jantina: formEle.jantina.value, kategori: formEle.kategori.value };
-                                        if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(id).set(ath);
-                                        else setAthletes([...athletes, ath]);
-                                        formEle.reset(); showToastMessage("Ahli baharu ditambah ke Rumah " + selectedMembersHouse);
-                                    }} className="flex flex-wrap gap-2 items-center flex-1">
-                                        <input name="nama" required type="text" placeholder="Nama Penuh..." className="border p-2 rounded-lg flex-1 min-w-[150px] uppercase shadow-sm" />
-                                        <input name="kelas" required type="text" placeholder="Kelas..." className="border p-2 rounded-lg w-20 shadow-sm" />
-                                        <select name="jantina" className="border p-2 rounded-lg shadow-sm"><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select>
-                                        <select name="kategori" className="border p-2 rounded-lg shadow-sm">{categories.map(c=><option key={c} value={c}>{c}</option>)}</select>
-                                        <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow-sm transition">Tambah</button>
-                                        <button type="button" onClick={(e) => { e.preventDefault(); setBulkHouse(selectedMembersHouse); setIsBulkModalOpen(true); }} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow-sm transition whitespace-nowrap">📂 Import Pukal</button>
-                                    </form>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-4 bg-white">
-                                    <table className="w-full text-left">
-                                        <thead className="border-b text-[10px] text-slate-400 uppercase bg-slate-50 sticky top-0"><tr><th className="py-3 px-2">No</th><th className="py-3 px-2">Nama Ahli</th><th className="py-3 px-2">Kelas</th><th className="py-3 px-2">Jantina</th><th className="py-3 px-2">Kategori</th>{userRole!=="pelawat"&&<th className="py-3 px-2 text-center">Aksi</th>}</tr></thead>
-                                        <tbody>
-                                            {athletes.filter(a => a.rumah === selectedMembersHouse).map((ath, idx) => (
-                                                <tr key={ath.id} className="border-b hover:bg-slate-50 transition">
-                                                    <td className="py-3 px-2">{idx+1}</td><td className="uppercase py-3 px-2 font-bold text-slate-800">{ath.nama}</td><td className="py-3 px-2">{ath.kelas}</td><td className="py-3 px-2">{ath.jantina}</td><td className="py-3 px-2 text-indigo-600 font-bold">{ath.kategori}</td>
-                                                    {userRole !== "pelawat" && <td className="py-3 px-2">
-                                                        <div className="flex justify-center items-center gap-3">
-                                                            <button onClick={()=>{setAthleteForm(ath);setIsEditingAthlete(true);setIsAddAthleteSidebarOpen(true);setShowMembersModal(false);}} className="text-blue-600 hover:scale-110 transition text-sm">✏️</button>
-                                                            <button onClick={()=>{
-                                                                if(!checkAuth()) return;
-                                                                if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id).delete();
-                                                                else setAthletes(athletes.filter(x=>x.id!==ath.id));
-                                                            }} className="text-red-500 hover:scale-110 transition text-sm">✕</button>
-                                                        </div>
-                                                    </td>}
-                                                </tr>
-                                            ))}
-                                            {athletes.filter(a => a.rumah === selectedMembersHouse).length === 0 && <tr><td colSpan="6" className="text-center py-6 text-slate-400 italic">Tiada ahli didaftarkan di dalam rumah ini.</td></tr>}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {isEventSidebarOpen && (
-                        <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
-                            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsEventSidebarOpen(false)}></div>
-                            <div className="relative w-full max-w-md bg-white p-6 h-full flex flex-col space-y-4 shadow-2xl animate-slide-in overflow-y-auto">
-                                <h3 className="font-black text-sm uppercase text-slate-900">{isEditingEvent ? "Edit Acara" : "Daftar Acara Baru"}</h3>
-                                <form onSubmit={handleEventSubmit} className="space-y-4 font-semibold">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="col-span-2 sm:col-span-1"><label className="block mb-1 text-slate-500 text-[10px] uppercase">No Acara (Opsyenal)</label><input type="text" value={eventForm.noAcara||""} onChange={e=>setEventForm({...eventForm, noAcara:e.target.value})} placeholder="Cth: 101" className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2 rounded-xl transition outline-none font-bold bg-slate-50" /></div>
-                                        <div className="col-span-2 sm:col-span-1"><label className="block mb-1 text-slate-500 text-[10px] uppercase">Nama Acara</label><input required type="text" value={eventForm.nama} onChange={e=>setEventForm({...eventForm, nama:e.target.value.toUpperCase()})} placeholder="Cth: LARI 100M" className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2 rounded-xl uppercase transition outline-none font-bold" /></div>
-                                    </div>
-                                    <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Kategori Umur (Pintar)</label><select value={eventForm.kategori} onChange={e=>setEventForm({...eventForm, kategori:e.target.value})} className="w-full border-2 border-slate-200 p-2 rounded-xl bg-slate-50 font-bold">{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Jenis Disiplin</label><select value={eventForm.jenis} onChange={e=>setEventForm({...eventForm, jenis:e.target.value})} className="w-full border-2 border-slate-200 p-2 rounded-xl bg-slate-50 font-bold"><option value="Balapan">Balapan</option><option value="Padang">Padang</option></select></div>
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Format Pertandingan</label><select value={eventForm.format} onChange={e=>setEventForm({...eventForm, format:e.target.value})} className="w-full border-2 border-slate-200 p-2 rounded-xl bg-slate-50 font-bold"><option value="Individu">Individu</option><option value="Berkumpulan">Berkumpulan (Relay)</option></select></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Tarikh</label><input type="date" value={eventForm.tarikh} onChange={e=>setEventForm({...eventForm, tarikh:e.target.value})} className="w-full border-2 border-slate-200 p-2 rounded-xl font-bold bg-slate-50" /></div>
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Masa</label><input type="time" value={eventForm.masa} onChange={e=>setEventForm({...eventForm, masa:e.target.value})} className="w-full border-2 border-slate-200 p-2 rounded-xl font-bold bg-slate-50" /></div>
-                                    </div>
-                                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl shadow-md transition font-bold mt-4 tracking-wide">Simpan Rekod Acara</button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {isAddAthleteSidebarOpen && (
-                        <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
-                            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsAddAthleteSidebarOpen(false)}></div>
-                            <div className="relative w-full max-w-md bg-white p-6 h-full flex flex-col space-y-4 shadow-2xl animate-slide-in">
-                                <h3 className="font-black text-sm uppercase text-slate-900">{isEditingAthlete ? "Kemaskini Profil Atlet" : "Pendaftaran Atlet Baru"}</h3>
-                                <form onSubmit={handleAthleteSubmit} className="space-y-4 font-semibold">
-                                    <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Nama Penuh (Seperti Sijil Lahir)</label><input required type="text" value={athleteForm.nama} onChange={e=>setAthleteForm({...athleteForm, nama:e.target.value.toUpperCase()})} className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2.5 rounded-xl uppercase transition outline-none font-bold" /></div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">No. Bib / No. Peserta</label><input type="text" value={athleteForm.noBib || ""} onChange={e=>setAthleteForm({...athleteForm, noBib:e.target.value})} placeholder="Cth: M012" className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2.5 rounded-xl uppercase transition outline-none font-bold" /></div>
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Kelas / Tahun</label><input required type="text" value={athleteForm.kelas} onChange={e=>setAthleteForm({...athleteForm, kelas:e.target.value})} className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2.5 rounded-xl uppercase transition outline-none font-bold" /></div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Rumah Sukan</label><select value={athleteForm.rumah} onChange={e=>setAthleteForm({...athleteForm, rumah:e.target.value})} className="w-full border-2 border-slate-200 p-2.5 rounded-xl bg-slate-50 font-bold">{Object.keys(housesMetadata).map(k=><option key={k} value={k}>{k}</option>)}</select></div>
-                                        <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Jantina</label><select value={athleteForm.jantina} onChange={e=>setAthleteForm({...athleteForm, jantina:e.target.value})} className="w-full border-2 border-slate-200 p-2.5 rounded-xl bg-slate-50 font-bold"><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
-                                    </div>
-                                    <div><label className="block mb-1 text-slate-500 text-[10px] uppercase">Kategori Umur</label><select value={athleteForm.kategori} onChange={e=>setAthleteForm({...athleteForm, kategori:e.target.value})} className="w-full border-2 border-slate-200 p-2.5 rounded-xl bg-slate-50 font-bold">{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
-                                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl shadow-md transition font-bold mt-4 tracking-wide">Simpan Profil Atlet</button>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {isAssignEventSidebarOpen && (
-                        <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
-                            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsAssignEventSidebarOpen(false)}></div>
-                            <div className="relative w-full max-w-md bg-white p-6 h-full flex flex-col space-y-4 shadow-2xl overflow-y-auto font-semibold animate-slide-in">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">Tetapan Penyertaan Acara Murid</h3>
-                                <div className="relative mt-2">
-                                    <label className="block mb-1 text-slate-400 uppercase text-[10px] tracking-wider">Cari Atlet (Taip Nama Penuh)</label>
-                                    <input type="text" value={studentSearchQuery} onChange={e=>{setStudentSearchQuery(e.target.value); setShowSearchDropdown(true);}} placeholder="Taip nama untuk mula mencari..." className="w-full border-2 border-indigo-200 focus:border-indigo-500 p-2.5 rounded-xl uppercase bg-indigo-50/30 transition outline-none" />
-                                    {showSearchDropdown && studentSearchQuery && (
-                                        <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
-                                            {(athletes||[]).filter(a=>(a.nama||"").toLowerCase().includes(studentSearchQuery.toLowerCase())).map(a => (
-                                                <div key={a.id} onClick={()=>{ 
-                                                    setSelectedStudentId(a.id); 
-                                                    setStudentSearchQuery(a.nama); 
-                                                    setSelectedEventIds(a.acaraIds||[]); 
-                                                    setSelectedRelayData(a.relayData||{});
-                                                    setShowSearchDropdown(false); 
-                                                }} className="p-3 border-b cursor-pointer hover:bg-indigo-50 uppercase text-slate-800 transition"><span className="font-bold block">{a.nama}</span><span className="text-[10px] text-slate-500 font-semibold">{a.kategori} | Rumah {a.rumah}</span></div>
-                                            ))}
-                                            {(athletes||[]).filter(a=>(a.nama||"").toLowerCase().includes(studentSearchQuery.toLowerCase())).length === 0 && <div className="p-3 text-slate-400 italic text-center text-[10px]">Tiada padanan.</div>}
-                                        </div>
-                                    )}
-                                </div>
-                                {selectedStudentId && (() => {
-                                    const ath = athletes.find(a=>a.id === selectedStudentId);
-                                    if(!ath) return null;
-                                    const availableEvents = eventsWithCode.filter(ev => {
-                                        const isCatMatch = categoriesMatch(ath.kategori, ev.kategori);
-                                        if (!isCatMatch) return false;
-                                        const evCatStr = (ev.kategori || "").trim().toUpperCase();
-                                        if (evCatStr === "TERBUKA" || evCatStr === "KESELURUHAN") return true;
-                                        if (ath.jantina === "Lelaki" && evCatStr.startsWith("P")) return false;
-                                        if (ath.jantina === "Perempuan" && evCatStr.startsWith("L")) return false;
-                                        return true;
-                                    });
-                                    const curInd = (selectedEventIds||[]).map(id=>(events||[]).find(e=>e.id===id)).filter(e=>e&&e.format==="Individu").length;
-                                    const curGrp = (selectedEventIds||[]).map(id=>(events||[]).find(e=>e.id===id)).filter(e=>e&&e.format==="Berkumpulan").length;
-                                    return (
-                                        <form onSubmit={e => {
-                                            e.preventDefault();
-                                            if(!checkAuth()) return;
-                                            if (curInd > maxIndividu) { showToastMessage(`Had Individu Melebihi Maksimum (${maxIndividu})!`, "error"); return; }
-                                            if (curGrp > maxKumpulan) { showToastMessage(`Had Kumpulan Melebihi Maksimum (${maxKumpulan})!`, "error"); return; }
-                                            const updated = {...ath, acaraIds: selectedEventIds, relayData: selectedRelayData};
-                                            if(isCloudActive&&db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id).set(updated);
-                                            else setAthletes(athletes.map(x=>x.id===ath.id?updated:x));
-                                            showToastMessage("Acara dikemaskini berjaya!"); setIsAssignEventSidebarOpen(false);
-                                        }} className="space-y-4 pt-2">
-                                            <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 shadow-sm space-y-1">
-                                                <p className="font-extrabold text-indigo-900 uppercase">Kuata Pendaftaran Atlet</p>
-                                                <div className="flex justify-between items-center bg-white p-2 rounded-lg mt-2 shadow-inner">
-                                                    <span className="text-[10px] uppercase font-bold text-slate-500">Individu</span>
-                                                    <span className={`font-mono text-sm font-black ${curInd>maxIndividu?"text-red-600":"text-indigo-600"}`}>{curInd} / {maxIndividu}</span>
-                                                </div>
-                                                <div className="flex justify-between items-center bg-white p-2 rounded-lg shadow-inner">
-                                                    <span className="text-[10px] uppercase font-bold text-slate-500">Berkumpulan (Relay)</span>
-                                                    <span className={`font-mono text-sm font-black ${curGrp>maxKumpulan?"text-red-600":"text-purple-600"}`}>{curGrp} / {maxKumpulan}</span>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1.5 bg-slate-50 border p-3 rounded-2xl max-h-[350px] overflow-y-auto shadow-inner">
-                                                <p className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-wider">Senarai Acara Layak Disertai (Kategori {ath.kategori}):</p>
-                                                {availableEvents.length === 0 ? <p className="italic text-slate-400 text-center py-4">Tiada acara didaftarkan untuk kategori ini.</p> : availableEvents.map(ev => {
-                                                    const checked = selectedEventIds.includes(ev.id);
-                                                    return (
-                                                        <div key={ev.id} className={`bg-white border-2 transition-all p-3 rounded-xl mb-2 ${checked ? 'border-indigo-400 shadow-md' : 'border-slate-200'}`}>
-                                                            <label className="flex items-start gap-3 cursor-pointer">
-                                                                <input type="checkbox" className="mt-1 w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500" checked={checked} onChange={()=>{
-                                                                    if(checked) {
-                                                                        setSelectedEventIds(selectedEventIds.filter(id=>id!==ev.id));
-                                                                        const newRelayData = {...selectedRelayData}; delete newRelayData[ev.id];
-                                                                        setSelectedRelayData(newRelayData);
-                                                                    } else { 
-                                                                        setSelectedEventIds([...selectedEventIds, ev.id]); 
-                                                                        if (ev.format === 'Berkumpulan') {
-                                                                            setSelectedRelayData(prev => ({...prev, [ev.id]: {pasukan: "A", pelari: "1"}}));
-                                                                        }
-                                                                    }
-                                                                }} />
-                                                                <div className="flex-1">
-                                                                    <p className="font-bold text-slate-800 leading-tight">[{ev.kodAcara}] {ev.nama}</p>
-                                                                    <span className={`inline-block mt-1 px-2 py-0.5 rounded uppercase font-black text-[9px] tracking-wide ${ev.format==='Berkumpulan'?'bg-purple-100 text-purple-700':'bg-slate-200 text-slate-600'}`}>{ev.format}</span>
-                                                                </div>
-                                                            </label>
-                                                            {checked && ev.format === 'Berkumpulan' && (
-                                                                <div className="flex gap-2 mt-3 ml-7 text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-200">
-                                                                    <div className="flex-1">
-                                                                        <span className="block text-[9px] text-slate-400 uppercase mb-0.5">Pasukan</span>
-                                                                        <select value={selectedRelayData[ev.id]?.pasukan || "A"} onChange={e => setSelectedRelayData(prev=>({...prev, [ev.id]:{...(prev[ev.id]||{}), pasukan:e.target.value}}))} className="w-full border border-slate-300 rounded p-1.5 bg-white font-bold text-slate-700 outline-none">
-                                                                            <option value="A">Pasukan A</option><option value="B">Pasukan B</option>
-                                                                        </select>
-                                                                    </div>
-                                                                    <div className="flex-1">
-                                                                        <span className="block text-[9px] text-slate-400 uppercase mb-0.5">Posisi Pelari</span>
-                                                                        <select value={selectedRelayData[ev.id]?.pelari || "1"} onChange={e => setSelectedRelayData(prev=>({...prev, [ev.id]:{...(prev[ev.id]||{}), pelari:e.target.value}}))} className="w-full border border-slate-300 rounded p-1.5 bg-white font-bold text-slate-700 outline-none">
-                                                                            <option value="1">Pelari Pertama (1)</option><option value="2">Pelari Kedua (2)</option><option value="3">Pelari Ketiga (3)</option><option value="4">Pelari Terakhir (4)</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                            <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-bold shadow-md transition tracking-wider mt-4">KUNCI PENYERTAAN</button>
-                                        </form>
-                                    )
-                                })()}
-                            </div>
-                        </div>
-                    )}
-
-                    {isEventRegModalOpen && activeRegEvent && (
-                        <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
-                            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsEventRegModalOpen(false)}></div>
-                            <div className="relative w-full max-w-2xl bg-white p-6 h-full flex flex-col space-y-4 shadow-2xl overflow-y-auto animate-slide-in">
-                                <div className="flex justify-between items-center border-b pb-3">
-                                    <h3 className="font-black text-sm uppercase text-slate-900">👥 Pendaftaran Peserta Berpusat</h3>
-                                    <button onClick={() => setIsEventRegModalOpen(false)} className="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
-                                </div>
-                                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
-                                    <p className="font-extrabold text-indigo-900 text-sm uppercase">[{activeRegEvent.kodAcara}] {activeRegEvent.nama}</p>
-                                    <p className="text-indigo-600 font-bold mt-1">Kategori: {activeRegEvent.kategori} | Format: {activeRegEvent.format}</p>
-                                </div>
-                                
-                                <div className="flex gap-2">
-                                    <select value={regModalHouseFilter} onChange={e => setRegModalHouseFilter(e.target.value)} className="border-2 border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 outline-none flex-1 focus:border-indigo-500 transition">
-                                        <option value="Semua">Semua Rumah</option>
-                                        {Object.keys(housesMetadata).map(h => <option key={h} value={h}>Rumah {h}</option>)}
-                                    </select>
-                                    <select value={regModalCategoryFilter} onChange={e => setRegModalCategoryFilter(e.target.value)} className="border-2 border-slate-200 p-2 rounded-xl text-xs font-bold bg-slate-50 outline-none flex-1 focus:border-indigo-500 transition">
-                                        <option value="Semua">Semua Kategori</option>
-                                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                </div>
-                                
-                                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-                                    {(() => {
-                                        const eligibleAthletes = athletes.filter(a => {
-                                            if (!categoriesMatch(a.kategori, activeRegEvent.kategori)) return false;
-                                            const evCatStr = (activeRegEvent.kategori || "").trim().toUpperCase();
-                                            if (evCatStr === "TERBUKA" || evCatStr === "KESELURUHAN") {
-                                                // open event, skip gender filter
-                                            } else {
-                                                if (a.jantina === "Lelaki" && evCatStr.startsWith("P")) return false;
-                                                if (a.jantina === "Perempuan" && evCatStr.startsWith("L")) return false;
-                                            }
-                                            
-                                            // UI Filters
-                                            if (regModalHouseFilter !== "Semua" && a.rumah !== regModalHouseFilter) return false;
-                                            if (regModalCategoryFilter !== "Semua" && a.kategori !== regModalCategoryFilter) return false;
-                                            
-                                            return true;
-                                        }).sort((a, b) => a.rumah.localeCompare(b.rumah) || a.nama.localeCompare(b.nama));
-                                        
-                                        if (eligibleAthletes.length === 0) return <p className="text-center text-slate-400 italic py-6">Tiada atlet yang melepasi syarat / tapisan untuk acara ini.</p>;
-                                        
-                                        return eligibleAthletes.map(ath => {
-                                            const isChecked = !!tempRegData[ath.id]?.selected;
-                                            return (
-                                                <div key={ath.id} className={`bg-white border-2 p-3 rounded-xl transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isChecked ? 'border-indigo-400 shadow-md bg-indigo-50/20' : 'border-slate-100'}`}>
-                                                    <label className="flex items-center gap-3 cursor-pointer flex-1">
-                                                        <input type="checkbox" checked={isChecked} onChange={(e) => {
-                                                            setTempRegData(prev => ({
-                                                                ...prev,
-                                                                [ath.id]: { selected: e.target.checked, pasukan: prev[ath.id]?.pasukan || "A", pelari: prev[ath.id]?.pelari || "1" }
-                                                            }));
-                                                        }} className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer" />
-                                                        <div>
-                                                            <p className="font-bold text-slate-800 uppercase text-sm">{ath.nama}</p>
-                                                            <p className="text-[10px] font-semibold text-slate-500">Rumah {ath.rumah} | Kelas {ath.kelas} | Kategori {ath.kategori}</p>
-                                                        </div>
-                                                    </label>
-                                                    {isChecked && activeRegEvent.format === "Berkumpulan" && (
-                                                        <div className="flex gap-2 w-full sm:w-auto bg-slate-50 p-2 rounded-lg border border-slate-200">
-                                                            <select value={tempRegData[ath.id]?.pasukan || "A"} onChange={e => setTempRegData(prev=>({...prev, [ath.id]:{...prev[ath.id], pasukan:e.target.value}}))} className="border-2 border-slate-200 p-1.5 rounded bg-white outline-none font-bold text-slate-700">
-                                                                <option value="A">Pasukan A</option><option value="B">Pasukan B</option>
-                                                            </select>
-                                                            <select value={tempRegData[ath.id]?.pelari || "1"} onChange={e => setTempRegData(prev=>({...prev, [ath.id]:{...prev[ath.id], pelari:e.target.value}}))} className="border-2 border-slate-200 p-1.5 rounded bg-white outline-none font-bold text-slate-700">
-                                                                <option value="1">Pelari 1</option><option value="2">Pelari 2</option><option value="3">Pelari 3</option><option value="4">Pelari 4</option>
-                                                            </select>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        });
-                                    })()}
-                                </div>
-                                
-                                <button onClick={async () => {
-                                    if(!checkAuth()) return;
-                                    const updatedAthletes = [];
-                                    for (let ath of athletes) {
-                                        const data = tempRegData[ath.id];
-                                        const currentlyHas = ath.acaraIds && ath.acaraIds.includes(activeRegEvent.id);
-                                        const shouldHave = !!data?.selected;
-                        
-                                        if (shouldHave !== currentlyHas || (shouldHave && activeRegEvent.format === 'Berkumpulan')) {
-                                            let newAcaraIds = ath.acaraIds || [];
-                                            let newRelayData = ath.relayData || {};
-                        
-                                            if (shouldHave) {
-                                                if (!currentlyHas) newAcaraIds = [...newAcaraIds, activeRegEvent.id];
-                                                if (activeRegEvent.format === 'Berkumpulan') {
-                                                    newRelayData[activeRegEvent.id] = { pasukan: data.pasukan, pelari: data.pelari };
-                                                }
-                                            } else {
-                                                newAcaraIds = newAcaraIds.filter(id => id !== activeRegEvent.id);
-                                                delete newRelayData[activeRegEvent.id];
-                                            }
-                        
-                                            updatedAthletes.push({ ...ath, acaraIds: newAcaraIds, relayData: newRelayData });
-                                        }
-                                    }
-                                    
-                                    if (updatedAthletes.length > 0) {
-                                        if (isCloudActive && db) {
-                                            const batch = db.batch();
-                                            updatedAthletes.forEach(ath => {
-                                                const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id);
-                                                batch.set(ref, ath);
-                                            });
-                                            await batch.commit();
-                                        } else {
-                                            let currentAthletes = [...athletes];
-                                            updatedAthletes.forEach(updated => {
-                                                const idx = currentAthletes.findIndex(a => a.id === updated.id);
-                                                if(idx !== -1) currentAthletes[idx] = updated;
-                                            });
-                                            setAthletes(currentAthletes);
-                                        }
-                                    }
-                                    setIsEventRegModalOpen(false);
-                                    showToastMessage(`Pendaftaran Berpusat Selesai. Sebanyak ${updatedAthletes.length} profil atlet telah dikemaskini secara serentak.`);
-                                }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold shadow-md transition tracking-wider mt-4">💾 SIMPAN PENDAFTARAN SERENTAK</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {showRecordForm && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-amber-900 border-b pb-2">🏆 Tambah Rekod Arkib Baharu</h3>
-                                <form onSubmit={handleRecordSubmit} className="space-y-3">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Tahun Dicapai</label><input required type="text" value={recordForm.tahun} onChange={e=>setRecordForm({...recordForm, tahun:e.target.value})} className="w-full border p-2.5 rounded-xl font-bold bg-slate-50" /></div>
-                                        <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Kategori</label><select value={recordForm.kategori} onChange={e=>setRecordForm({...recordForm, kategori:e.target.value})} className="w-full border p-2.5 rounded-xl font-bold bg-slate-50">{categories.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
-                                    </div>
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Acara Sukan</label><input required type="text" value={recordForm.acara} onChange={e=>setRecordForm({...recordForm, acara:e.target.value.toUpperCase()})} placeholder="Cth: LOMPAT JAUH" className="w-full border p-2.5 rounded-xl uppercase font-bold bg-slate-50" /></div>
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama Penuh Pemegang Rekod</label><input required type="text" value={recordForm.nama} onChange={e=>setRecordForm({...recordForm, nama:e.target.value.toUpperCase()})} placeholder="Nama atlet..." className="w-full border p-2.5 rounded-xl uppercase font-bold bg-slate-50" /></div>
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Catatan Terbaik Dicapai</label><input required type="text" value={recordForm.catatan} onChange={e=>setRecordForm({...recordForm, catatan:e.target.value})} placeholder="Cth: 10.52s atau 4.30m" className="w-full border p-2.5 rounded-xl font-bold bg-slate-50" /></div>
-                                    <div className="flex gap-3 pt-3">
-                                        <button type="button" onClick={()=>setShowRecordForm(false)} className="flex-1 bg-slate-200 hover:bg-slate-300 py-3 rounded-xl transition">Batal</button>
-                                        <button type="submit" className="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl shadow-md transition font-bold">Simpan Ke Arkib</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {showSignatoryModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-8 w-full max-w-2xl text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">✍️ Tetapan Penandatangan Sijil & Laporan Kokum</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                        <div className="flex justify-between items-center mb-2 border-b border-indigo-200 pb-1">
-                                            <p className="font-bold text-indigo-700">1. Disediakan Oleh (S/U Sukan)</p>
-                                            <label className="flex items-center gap-1 cursor-pointer" title="Tandakan untuk papar di Sijil">
-                                                <input type="checkbox" checked={certShowSignatory1} onChange={e=>setCertShowSignatory1(e.target.checked)} className="w-3 h-3 text-indigo-600 rounded" />
-                                                <span className="text-[9px] uppercase font-bold text-slate-500">Papar Sijil</span>
-                                            </label>
-                                        </div>
-                                        <label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama Penuh</label>
-                                        <input type="text" value={certSignatory1Name} onChange={e=>setCertSignatory1Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white mb-2" />
-                                        <label className="block mb-1 text-slate-500 uppercase text-[10px]">Jawatan</label>
-                                        <input type="text" value={certSignatory1Title} onChange={e=>setCertSignatory1Title(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" />
-                                    </div>
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                        <div className="flex justify-between items-center mb-2 border-b border-indigo-200 pb-1">
-                                            <p className="font-bold text-indigo-700">2. Disemak Oleh (PK Kokurikulum)</p>
-                                            <label className="flex items-center gap-1 cursor-pointer" title="Tandakan untuk papar di Sijil">
-                                                <input type="checkbox" checked={certShowSignatory2} onChange={e=>setCertShowSignatory2(e.target.checked)} className="w-3 h-3 text-indigo-600 rounded" />
-                                                <span className="text-[9px] uppercase font-bold text-slate-500">Papar Sijil</span>
-                                            </label>
-                                        </div>
-                                        <label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama Penuh</label>
-                                        <input type="text" value={certSignatory2Name} onChange={e=>setCertSignatory2Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white mb-2" />
-                                        <label className="block mb-1 text-slate-500 uppercase text-[10px]">Jawatan</label>
-                                        <input type="text" value={certSignatory2Title} onChange={e=>setCertSignatory2Title(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" />
-                                    </div>
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 md:col-span-2">
-                                        <div className="flex justify-between items-center mb-2 border-b border-indigo-200 pb-1">
-                                            <p className="font-bold text-indigo-700">3. Disahkan Oleh (Guru Besar)</p>
-                                            <label className="flex items-center gap-1 cursor-pointer" title="Tandakan untuk papar di Sijil">
-                                                <input type="checkbox" checked={certShowSignatory3} onChange={e=>setCertShowSignatory3(e.target.checked)} className="w-3 h-3 text-indigo-600 rounded" />
-                                                <span className="text-[9px] uppercase font-bold text-slate-500">Papar Sijil</span>
-                                            </label>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama Penuh</label>
-                                                <input type="text" value={certSignatory3Name} onChange={e=>setCertSignatory3Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" />
-                                            </div>
-                                            <div>
-                                                <label className="block mb-1 text-slate-500 uppercase text-[10px]">Jawatan</label>
-                                                <input type="text" value={certSignatory3Title} onChange={e=>setCertSignatory3Title(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 pt-3">
-                                    <button onClick={()=>setShowSignatoryModal(false)} className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl transition">Batal</button>
-                                    <button onClick={()=>{
-                                        if(!checkAuth()) return;
-                                        localStorage.setItem('sps_sig1_name', certSignatory1Name);
-                                        localStorage.setItem('sps_sig1_title', certSignatory1Title);
-                                        localStorage.setItem('sps_sig2_name', certSignatory2Name);
-                                        localStorage.setItem('sps_sig2_title', certSignatory2Title);
-                                        localStorage.setItem('sps_sig3_name', certSignatory3Name);
-                                        localStorage.setItem('sps_sig3_title', certSignatory3Title);
-                                        
-                                        localStorage.setItem('sps_sig1_show', certShowSignatory1);
-                                        localStorage.setItem('sps_sig2_show', certShowSignatory2);
-                                        localStorage.setItem('sps_sig3_show', certShowSignatory3);
-                                        
-                                        setShowSignatoryModal(false); showToastMessage("Maklumat semua penandatangan dikemaskini.");
-                                    }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition">Simpan Tetapan</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {showPointsModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">⚙️ Tetapan Kategori, Mata & Had Acara</h3>
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-inner">
-                                    <label className="block mb-2 font-bold text-slate-600 uppercase text-[10px]">Senarai Kategori Acara</label>
-                                    <div className="flex gap-2 mb-3">
-                                        <input type="text" value={newCategoryName} onChange={e=>setNewCategoryName(e.target.value.toUpperCase())} placeholder="Cth: L12TKB" className="flex-1 border p-2 rounded-xl uppercase font-bold" />
-                                        <button onClick={()=>{
-                                            if(!newCategoryName.trim()) return;
-                                            const newCats = [...new Set([...categories, newCategoryName.trim()])];
-                                            setCategories(newCats); setNewCategoryName(""); showToastMessage("Kategori ditambah (Sila Simpan Global).");
-                                        }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold shadow transition">+ Tambah</button>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {categories.map(c=>(
-                                            <span key={c} className="bg-white border border-slate-300 px-2 py-1.5 rounded-lg text-[10px] flex items-center gap-2 shadow-sm font-bold text-indigo-800">
-                                                {c}
-                                                <button onClick={() => {
-                                                    setCategories(categories.filter(cat => cat !== c));
-                                                    showToastMessage(`Kategori ${c} dipadam. Sila Simpan Global.`);
-                                                }} className="text-red-500 hover:text-red-700 font-bold bg-red-50 px-1.5 rounded">✕</button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 border-t pt-4">
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Mata Emas (🥇)</label><input type="number" value={pointsConfig.emas} onChange={e=>setPointsConfig({...pointsConfig,emas:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl text-center font-mono font-bold bg-amber-50" /></div>
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Mata Perak (🥈)</label><input type="number" value={pointsConfig.perak} onChange={e=>setPointsConfig({...pointsConfig,perak:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl text-center font-mono font-bold bg-slate-100" /></div>
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Mata Gangsa (🥉)</label><input type="number" value={pointsConfig.gangsa} onChange={e=>setPointsConfig({...pointsConfig,gangsa:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl text-center font-mono font-bold bg-orange-50" /></div>
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Mata Keempat (🏅)</label><input type="number" value={pointsConfig.keempat} onChange={e=>setPointsConfig({...pointsConfig,keempat:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl text-center font-mono font-bold bg-blue-50" /></div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 border-t pt-4">
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Had Maksimum Acara (Individu)</label><input type="number" value={maxIndividu} onChange={e=>setMaxIndividu(parseInt(e.target.value)||0)} className="w-full border p-2 rounded-xl text-center font-mono font-bold bg-indigo-50 text-indigo-700" /></div>
-                                    <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Had Maksimum Acara (Kumpulan)</label><input type="number" value={maxKumpulan} onChange={e=>setMaxKumpulan(parseInt(e.target.value)||0)} className="w-full border p-2 rounded-xl text-center font-mono font-bold bg-purple-50 text-purple-700" /></div>
-                                </div>
-                                <div className="flex gap-3 pt-3 border-t">
-                                    <button onClick={()=>setShowPointsModal(false)} className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl transition">Batal</button>
-                                    <button onClick={async ()=>{
-                                        if(!checkAuth()) return;
-                                        if(isCloudActive&&db) {
-                                            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('points').set(pointsConfig);
-                                            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('config').set({ maxIndividu, maxKumpulan, activeYear, categories });
-                                        } else {
-                                            localStorage.setItem('sps_max_individu', maxIndividu); localStorage.setItem('sps_max_kumpulan', maxKumpulan);
-                                        }
-                                        setShowPointsModal(false); showToastMessage("Tetapan Global Disimpan!");
-                                    }} className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md transition font-bold tracking-wide">SIMPAN GLOBAL</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {showSchoolSetupModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl w-full max-w-xl text-xs font-semibold space-y-4 max-h-[90vh] flex flex-col shadow-2xl">
-                                <div className="p-6 pb-2 border-b">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-black text-sm uppercase text-slate-900">🏫 Tetapan Sekolah Baharu</h3>
-                                        <button onClick={() => setShowSchoolSetupModal(false)} className="text-slate-400 hover:text-slate-700 text-lg">✕</button>
-                                    </div>
-                                    <div className="flex text-[11px]">
-                                        <button onClick={() => setSchoolSetupTab("config")} className={`flex-1 pb-2 text-center border-b-2 font-bold transition ${schoolSetupTab === "config" ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}>⚙️ Konfigurasi Portal</button>
-                                        <button onClick={() => setSchoolSetupTab("rules")} className={`flex-1 pb-2 text-center border-b-2 font-bold transition ${schoolSetupTab === "rules" ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}>🔒 Rules Firestore</button>
-                                        <button onClick={() => setSchoolSetupTab("script")} className={`flex-1 pb-2 text-center border-b-2 font-bold transition ${schoolSetupTab === "script" ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}>📄 Apps Script</button>
-                                    </div>
-                                </div>
-                                <div className="p-6 pt-2 flex-1 overflow-y-auto">
-                                    {schoolSetupTab === "config" && (
-                                        <form id="school-setup-form" onSubmit={e => {
-                                            e.preventDefault(); 
-                                            if(!checkAuth()) return;
-                                            const form = e.target;
-                                            localStorage.setItem('sps_school_name', form.sName.value.trim() || DEFAULT_SCHOOL_NAME);
-                                            localStorage.setItem('sps_school_subtitle', form.sSub.value.trim() || DEFAULT_SCHOOL_SUBTITLE);
-                                            localStorage.setItem('sps_school_logo', form.sLogo.value.trim() || DEFAULT_SCHOOL_LOGO);
-                                            localStorage.setItem('sps_active_year', form.sYear.value.trim() || new Date().getFullYear().toString());
-                                            
-                                            const fRaw = form.fConfig.value.trim();
-                                            if (fRaw) { try { JSON.parse(fRaw); localStorage.setItem('sps_custom_firebase_config', fRaw); } catch(err) { showToastMessage("Ralat JSON Firebase", "error"); return; } }
-                                            else { localStorage.removeItem('sps_custom_firebase_config'); }
-                                            
-                                            localStorage.setItem('sps_custom_gas_url', form.gUrl.value.trim());
-                                            showToastMessage("Tetapan Portal Disimpan! Memuat Semula Sistem..."); setTimeout(()=>window.location.reload(), 1500);
-                                        }} className="space-y-4">
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama Pendek Sekolah</label><input name="sName" type="text" defaultValue={activeSchoolName} className="w-full border-2 border-slate-200 p-2.5 rounded-xl uppercase font-bold" /></div>
-                                                <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama Kejohanan</label><input name="sSub" type="text" defaultValue={activeSchoolSubtitle} className="w-full border-2 border-slate-200 p-2.5 rounded-xl font-bold" /></div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Tahun</label><input name="sYear" type="number" defaultValue={activeYear} className="w-full border-2 border-slate-200 p-2.5 rounded-xl font-bold bg-amber-50 text-amber-900" /></div>
-                                                <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">URL Logo Sekolah</label><input name="sLogo" type="text" defaultValue={logoUrl} className="w-full border-2 border-slate-200 p-2.5 rounded-xl font-mono text-[10px]" /></div>
-                                            </div>
-                                            <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Pautan Web App (Google Apps Script)</label><input name="gUrl" type="text" defaultValue={gasUrl} className="w-full border-2 border-slate-200 p-2.5 rounded-xl font-mono text-[10px]" /></div>
-                                            <div className="border-t pt-3">
-                                                <label className="block mb-1 text-slate-500 uppercase text-[10px]">Kod JSON Firebase</label>
-                                                <textarea name="fConfig" rows="4" defaultValue={cachedConfigRaw||""} className="w-full border-2 border-slate-200 p-2.5 rounded-xl font-mono text-[10px] bg-slate-50"></textarea>
-                                            </div>
-                                        </form>
-                                    )}
-                                    {schoolSetupTab === "rules" && (
-                                        <div className="space-y-3">
-                                            <textarea readOnly rows="10" defaultValue={"rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /artifacts/{appId}/public/data/{collectionName}/{docId} {\n      allow read: if true;\n      allow write: if true;\n    }\n  }\n}"} className="w-full p-3 border-2 border-slate-200 rounded-xl font-mono text-[10px] bg-slate-50 text-slate-700" />
-                                        </div>
-                                    )}
-                                    {schoolSetupTab === "script" && (
-                                        <div className="space-y-3">
-                                            <textarea readOnly rows="10" defaultValue={"function doPost(e) {\n  return ContentService.createTextOutput(JSON.stringify({s:'ok'})).setMimeType(ContentService.MimeType.JSON);\n}"} className="w-full p-3 border-2 border-slate-200 rounded-xl font-mono text-[10px] bg-slate-50 text-slate-700" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="p-5 border-t flex justify-between items-center bg-slate-50 rounded-b-2xl">
-                                    {schoolSetupTab === "config" ? (
-                                        <React.Fragment>
-                                            <button type="button" onClick={()=>{localStorage.clear(); window.location.reload();}} className="text-red-500 font-bold underline text-[11px]">Set Semula Lalai</button>
-                                            <div className="flex gap-2">
-                                                <button type="button" onClick={()=>setShowSchoolSetupModal(false)} className="px-4 py-2.5 bg-white border rounded-xl font-bold">Batal</button>
-                                                <button type="submit" form="school-setup-form" className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold">Simpan & Restart</button>
-                                            </div>
-                                        </React.Fragment>
-                                    ) : (
-                                        <div className="w-full flex justify-end">
-                                            <button type="button" onClick={()=>setShowSchoolSetupModal(false)} className="px-6 py-2.5 bg-slate-200 font-bold rounded-xl">Tutup</button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {showAdminManagerModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">👥 Pengurusan Admin Tambahan</h3>
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-inner">
-                                    <label className="block mb-2 font-bold text-slate-600 uppercase text-[10px]">Tambah E-mel Baru</label>
-                                    <div className="flex gap-2 mb-3">
-                                        <input type="email" value={newAdminEmail} onChange={e=>setNewAdminEmail(e.target.value.toLowerCase())} placeholder="Cth: admin@gmail.com" className="flex-1 border p-2 rounded-xl font-bold outline-none focus:border-indigo-500" />
-                                        <button onClick={async ()=>{
-                                            if(!checkAuth()) return;
-                                            if(!newAdminEmail.trim() || !newAdminEmail.includes('@')) return showToastMessage("Sila masukkan e-mel sah", "error");
-                                            const currentList = adminList.map(a => typeof a === 'string' ? a : (a.email||""));
-                                            const newAdmins = [...new Set([...currentList, newAdminEmail.trim()])];
-                                            if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({ list: newAdmins });
-                                            else setAdminList(newAdmins);
-                                            setNewAdminEmail(""); showToastMessage("Admin ditambah.");
-                                        }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold shadow transition">+ Tambah</button>
-                                    </div>
-                                    <label className="block mb-2 mt-4 font-bold text-slate-600 uppercase text-[10px]">Senarai E-mel Berdaftar</label>
-                                    <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
-                                        {adminList.map(a=>{
-                                            const emailStr = typeof a === 'string' ? a : (a.email||"");
-                                            return (
-                                            <div key={emailStr} className="bg-white border px-3 py-2 rounded-lg text-xs flex justify-between items-center shadow-sm font-bold text-slate-800">
-                                                {emailStr}
-                                                <button onClick={async () => {
-                                                    if(!checkAuth()) return;
-                                                    const newAdmins = adminList.map(x => typeof x === 'string' ? x : (x.email||"")).filter(e => e !== emailStr);
-                                                    if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({ list: newAdmins });
-                                                    else setAdminList(newAdmins);
-                                                    showToastMessage("Admin dipadam.");
-                                                }} className="text-red-500 bg-red-50 px-2 py-1 rounded">✕</button>
-                                            </div>
-                                        )})}
-                                        {adminList.length === 0 && <p className="text-[10px] text-slate-400 italic text-center py-2">Tiada admin tambahan.</p>}
-                                    </div>
-                                </div>
-                                <div className="flex justify-end pt-2">
-                                    <button onClick={() => setShowAdminManagerModal(false)} className="px-6 py-2.5 bg-slate-200 rounded-xl font-bold">Tutup</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {showDiagModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 max-w-md w-full text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="text-sm font-black text-slate-900 uppercase border-b pb-2">ℹ️ Maklumat Diagnostik Sistem</h3>
-                                <div className="space-y-3 font-mono text-[11px] bg-slate-50 p-5 rounded-xl border leading-relaxed">
-                                    <p className="font-bold text-slate-800">Status Node: <span className={isCloudActive ? "text-emerald-600" : "text-amber-600"}>{isCloudActive ? "BERSAMBUNG (ONLINE)" : "TERPUTUS (LOCAL)"}</span></p>
-                                    <p className="text-slate-600">Jumlah Rekod Atlet: {athletes.length}</p>
-                                    <p className="text-slate-600">Jumlah Acara: {events.length}</p>
-                                </div>
-                                <div className="flex justify-end pt-2">
-                                    <button onClick={() => setShowDiagModal(false)} className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-bold">Tutup</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {confirmModal.show && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[10001] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-xs space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm text-red-600 uppercase">{confirmModal.title}</h3>
-                                <p className="text-slate-600 font-semibold">{confirmModal.message}</p>
-                                <div className="flex gap-2 pt-2">
-                                    <button onClick={() => setConfirmModal({ show: false, title: "", message: "", onConfirm: null })} className="flex-1 px-4 py-2 bg-slate-200 rounded-xl font-bold">Batal</button>
-                                    <button onClick={confirmModal.onConfirm} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl font-bold shadow-md">Ya, Teruskan</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {isPreviewModalOpen && (
-                        <div className="fixed inset-0 bg-slate-900/80 z-[10000] flex flex-col p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-slate-100 rounded-2xl shadow-2xl flex flex-col flex-1 max-w-5xl w-full mx-auto overflow-hidden border border-slate-300">
-                                <div className="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md z-10">
-                                    <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">🖨️ Pratinjau Dokumen Cetak</h3>
-                                    <button onClick={()=>setIsPreviewModalOpen(false)} className="bg-slate-800 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold transition">✕</button>
-                                </div>
-                                <div className="flex-1 p-0 sm:p-4 overflow-hidden bg-slate-300/50">
-                                    <iframe id="preview-frame" srcDoc={previewContent} className="w-full h-full border-none sm:rounded-xl shadow-lg" />
+                        <div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 animate-fade-in">
+                            <div className="bg-slate-100 w-full max-w-5xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+                                <div className="flex-1 w-full bg-slate-300/50 p-2 sm:p-6 overflow-hidden relative flex justify-center">
+                                    <iframe id="preview-frame" srcDoc={previewContent} className="w-full h-full border-none sm:rounded-xl shadow-lg relative z-10" />
                                 </div>
                                 <div className="p-4 bg-white flex justify-end gap-3 text-xs font-bold border-t z-10">
                                     {currentPrintMode === 'kokum' && (
