@@ -139,19 +139,15 @@
             const [pointsConfig, setPointsConfig] = useState({ emas: 5, perak: 3, gangsa: 2, keempat: 1 });
             const [gasUrl, setGasUrl] = useState(localStorage.getItem('sps_custom_gas_url') || "");
 
-            // Lock System States
             const [isSystemLocked, setIsSystemLocked] = useState(false);
             const [lockConfig, setLockConfig] = useState({ isLocked: false, autoLockDate: "" });
             const [showLockModal, setShowLockModal] = useState(false);
 
             const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
             const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
-            const [passcodeInput, setPasscodeInput] = useState("");
             const [showPointsModal, setShowPointsModal] = useState(false);
             const [showSchoolSetupModal, setShowSchoolSetupModal] = useState(false);
             const [showDiagModal, setShowDiagModal] = useState(false);
-            const [schoolSetupTab, setSchoolSetupTab] = useState("config");
-            const [showSignatoryModal, setShowSignatoryModal] = useState(false);
             const [showAdminManagerModal, setShowAdminManagerModal] = useState(false);
             const [newAdminEmail, setNewAdminEmail] = useState("");
             
@@ -161,7 +157,6 @@
             const [certSignatory2Title, setCertSignatory2Title] = useState(() => localStorage.getItem('sps_sig2_title') || "Penolong Kanan Kokurikulum");
             const [certSignatory3Name, setCertSignatory3Name] = useState(() => localStorage.getItem('sps_sig3_name') || "ADAM CORRIE");
             const [certSignatory3Title, setCertSignatory3Title] = useState(() => localStorage.getItem('sps_sig3_title') || "Guru Besar");
-            
             const [certShowSignatory1, setCertShowSignatory1] = useState(() => localStorage.getItem('sps_sig1_show') !== 'false');
             const [certShowSignatory2, setCertShowSignatory2] = useState(() => localStorage.getItem('sps_sig2_show') !== 'false');
             const [certShowSignatory3, setCertShowSignatory3] = useState(() => localStorage.getItem('sps_sig3_show') !== 'false');
@@ -177,51 +172,27 @@
             const [eventForm, setEventForm] = useState({ id: "", noAcara: "", nama: "", kategori: "L12TKB", jenis: "Balapan", format: "Individu", tarikh: "", masa: "" });
             const [isEventSidebarOpen, setIsEventSidebarOpen] = useState(false);
             const [isEditingEvent, setIsEditingEvent] = useState(false);
-            const [newCategoryName, setNewCategoryName] = useState("");
 
             const [houseForm, setHouseForm] = useState({ nama: "", slogan: "", guruPenasihat: "", bonusPoints: 0, warnaLabel: "Ungu" });
             const [isHouseSidebarOpen, setIsHouseSidebarOpen] = useState(false);
             const [isEditingHouse, setIsEditingHouse] = useState(false);
             const [originalHouseKey, setOriginalHouseKey] = useState("");
-            const [newAdvisorText, setNewAdvisorText] = useState({});
             const [showMembersModal, setShowMembersModal] = useState(false);
             const [selectedMembersHouse, setSelectedMembersHouse] = useState("");
 
-            const [isAssignEventSidebarOpen, setIsAssignEventSidebarOpen] = useState(false);
-            const [studentSearchQuery, setStudentSearchQuery] = useState("");
             const [athleteSearchQuery, setAthleteSearchQuery] = useState("");
-            const [selectedStudentId, setSelectedStudentId] = useState("");
-            const [selectedEventIds, setSelectedEventIds] = useState([]);
-            const [selectedRelayData, setSelectedRelayData] = useState({});
-            const [showSearchDropdown, setShowSearchDropdown] = useState(false);
-
             const [isEventRegModalOpen, setIsEventRegModalOpen] = useState(false);
             const [activeRegEvent, setActiveRegEvent] = useState(null);
-            const [tempRegData, setTempRegData] = useState({});
             const [regModalHouseFilter, setRegModalHouseFilter] = useState("Semua");
             const [regModalCategoryFilter, setRegModalCategoryFilter] = useState("Semua");
 
-            const [gridResults, setGridResults] = useState({});
-            const [cetakTop8Mode, setCetakTop8Mode] = useState(false);
-
             const [resultForm, setResultForm] = useState({ eventId: "", athleteId: "", kedudukan: "1", catatan: "" });
-
             const [announceFormText, setAnnounceFormText] = useState("");
             const [showAnnounceForm, setShowAnnounceForm] = useState(false);
             const [selectedEventDate, setSelectedEventDate] = useState("Semua");
-            const [certSearchQuery, setCertSearchQuery] = useState("");
-            const [certHouseFilter, setCertHouseFilter] = useState("Semua");
-            const [certEventFilter, setCertEventFilter] = useState("Semua");
             
             const [bestAthleteMaleCat, setBestAthleteMaleCat] = useState("");
             const [bestAthleteFemaleCat, setBestAthleteFemaleCat] = useState("");
-            const [athleteHouseFilter, setAthleteHouseFilter] = useState("Semua");
-            
-            const [bestMaleResults, setBestMaleResults] = useState([]);
-            const [bestFemaleResults, setBestFemaleResults] = useState([]);
-
-            const [recordForm, setRecordForm] = useState({id:"", acara:"", kategori:categories[0]||"L12TKB", catatan:"", nama:"", tahun:activeYear});
-            const [showRecordForm, setShowRecordForm] = useState(false);
 
             const [kokumManualText, setKokumManualText] = useState(() => localStorage.getItem('sps_kokum_manual') || `<b>1. Kehadiran Tetamu / Jemputan:</b><br><br><br><b>2. Kewangan & Perbelanjaan:</b><br><br><br><b>3. Kekuatan Program:</b><br><br><br><b>4. Isu / Cabaran & Cadangan Penambahbaikan:</b><br><br><br>`);
             const [currentPrintMode, setCurrentPrintMode] = useState("");
@@ -239,18 +210,6 @@
             const activeSchoolSubtitle = localStorage.getItem('sps_school_subtitle') || DEFAULT_SCHOOL_SUBTITLE;
             const logoUrl = localStorage.getItem('sps_school_logo') || DEFAULT_SCHOOL_LOGO;
 
-            useEffect(() => {
-                if (resultForm.eventId) {
-                    const initGrid = {};
-                    results.filter(r => r.eventId === resultForm.eventId).forEach(r => {
-                        initGrid[r.athleteId] = { kedudukan: r.kedudukan, catatan: r.catatan || "" };
-                    });
-                    setGridResults(initGrid);
-                } else {
-                    setGridResults({});
-                }
-            }, [resultForm.eventId, results]);
-            
             useEffect(() => {
                 const handleClickOutside = (event) => {
                     if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
@@ -276,16 +235,6 @@
                 return () => unsubscribe();
             }, []);
 
-            useEffect(() => {
-                if (userRole === "pelawat" && ["rumah_sukan", "acara", "atlit", "pasca_sukan", "ramalan"].includes(activeTab)) {
-                    setActiveTab("dashboard");
-                }
-                if ((userRole === "guru" || userRole === "urusetia") && activeTab === "ramalan") {
-                    setActiveTab("dashboard");
-                }
-            }, [userRole, activeTab]);
-
-            // Auto-Lock Timer Logic
             useEffect(() => {
                 let isLockedNow = lockConfig.isLocked === true;
                 if (!isLockedNow && lockConfig.autoLockDate) {
@@ -397,7 +346,7 @@
                 
                 (results || []).forEach(res => {
                     const evExists = events.some(e => e.id === res.eventId);
-                    if (!evExists) return; // Abaikan mata jika acara dipadam
+                    if (!evExists) return;
 
                     let targetHouse = null;
                     if (res.athleteId && res.athleteId.startsWith("TEAM_")) {
@@ -439,31 +388,31 @@
             }, [events]);
 
             const calculateBest = (gender, cat) => {
-            if (!cat) return [];
-            const catAthletes = athletes.filter(a => a.jantina === gender && (a.kategori === cat || categoriesMatch(a.kategori, cat)));
-            const stats = catAthletes.map(ath => {
-                let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
-                let senaraiAcara = [];
-                results.forEach(r => {
-                    const ev = events.find(e => e.id === r.eventId);
-                    if (!ev) return;
-                    
-                    let isWinner = false;
-                    if (r.athleteId === ath.id) {
-                        isWinner = true;
-                    } else if (ev.format === "Berkumpulan" && r.athleteId && r.athleteId.startsWith("TEAM_")) {
-                        const parts = r.athleteId.split('_');
-                        if (ath.rumah === parts[1] && ath.acaraIds && ath.acaraIds.includes(ev.id)) {
-                            const rData = (ath.relayData && ath.relayData[ev.id]) || { pasukan: "A", pelari: "1" };
-                            if (rData.pasukan === parts[2]) {
-                                isWinner = true;
+                if (!cat) return [];
+                const catAthletes = athletes.filter(a => a.jantina === gender && (a.kategori === cat || categoriesMatch(a.kategori, cat)));
+                const stats = catAthletes.map(ath => {
+                    let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
+                    let senaraiAcara = [];
+                    results.forEach(r => {
+                        const ev = events.find(e => e.id === r.eventId);
+                        if (!ev) return;
+                        
+                        let isWinner = false;
+                        if (r.athleteId === ath.id) {
+                            isWinner = true;
+                        } else if (ev.format === "Berkumpulan" && r.athleteId && r.athleteId.startsWith("TEAM_")) {
+                            const parts = r.athleteId.split('_');
+                            if (ath.rumah === parts[1] && ath.acaraIds && ath.acaraIds.includes(ev.id)) {
+                                const rData = (ath.relayData && ath.relayData[ev.id]) || { pasukan: "A", pelari: "1" };
+                                if (rData.pasukan === parts[2]) {
+                                    isWinner = true;
+                                }
                             }
                         }
-                    }
 
-                    if (isWinner) {
-                        let pingat = "";
-                        if(r.kedudukan==="1"){g++; pts+=pointsConfig.emas; if(ev.jenis==="Balapan") bg++; pingat = "Emas";}
+                        if (isWinner) {
+                            let pingat = "";
+                            if(r.kedudukan==="1"){g++; pts+=pointsConfig.emas; if(ev.jenis==="Balapan") bg++; pingat = "Emas";}
                             else if(r.kedudukan==="2"){s++; pts+=pointsConfig.perak; if(ev.jenis==="Balapan") bs++; pingat = "Perak";}
                             else if(r.kedudukan==="3"){b++; pts+=pointsConfig.gangsa; if(ev.jenis==="Balapan") bb++; pingat = "Gangsa";}
                             else if(r.kedudukan==="4"){k++; pts+=pointsConfig.keempat; pingat = "Ke-4";}
@@ -491,30 +440,30 @@
             };
 
             const calculateOverallBest = (gender) => {
-            const catAthletes = athletes.filter(a => a.jantina === gender);
-            const stats = catAthletes.map(ath => {
-                let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
-                let senaraiAcara = [];
-                results.forEach(r => {
-                    const ev = events.find(e => e.id === r.eventId);
-                    if (!ev) return;
-                    
-                    let isWinner = false;
-                    if (r.athleteId === ath.id) {
-                        isWinner = true;
-                    } else if (ev.format === "Berkumpulan" && r.athleteId && r.athleteId.startsWith("TEAM_")) {
-                        const parts = r.athleteId.split('_');
-                        if (ath.rumah === parts[1] && ath.acaraIds && ath.acaraIds.includes(ev.id)) {
-                            const rData = (ath.relayData && ath.relayData[ev.id]) || { pasukan: "A", pelari: "1" };
-                            if (rData.pasukan === parts[2]) {
-                                isWinner = true;
+                const catAthletes = athletes.filter(a => a.jantina === gender);
+                const stats = catAthletes.map(ath => {
+                    let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
+                    let senaraiAcara = [];
+                    results.forEach(r => {
+                        const ev = events.find(e => e.id === r.eventId);
+                        if (!ev) return;
+                        
+                        let isWinner = false;
+                        if (r.athleteId === ath.id) {
+                            isWinner = true;
+                        } else if (ev.format === "Berkumpulan" && r.athleteId && r.athleteId.startsWith("TEAM_")) {
+                            const parts = r.athleteId.split('_');
+                            if (ath.rumah === parts[1] && ath.acaraIds && ath.acaraIds.includes(ev.id)) {
+                                const rData = (ath.relayData && ath.relayData[ev.id]) || { pasukan: "A", pelari: "1" };
+                                if (rData.pasukan === parts[2]) {
+                                    isWinner = true;
+                                }
                             }
                         }
-                    }
 
-                    if (isWinner) {
-                        let pingat = "";
-                        if(r.kedudukan==="1"){g++; pts+=pointsConfig.emas; if(ev.jenis==="Balapan") bg++; pingat = "Emas";}
+                        if (isWinner) {
+                            let pingat = "";
+                            if(r.kedudukan==="1"){g++; pts+=pointsConfig.emas; if(ev.jenis==="Balapan") bg++; pingat = "Emas";}
                             else if(r.kedudukan==="2"){s++; pts+=pointsConfig.perak; if(ev.jenis==="Balapan") bs++; pingat = "Perak";}
                             else if(r.kedudukan==="3"){b++; pts+=pointsConfig.gangsa; if(ev.jenis==="Balapan") bb++; pingat = "Gangsa";}
                             else if(r.kedudukan==="4"){k++; pts+=pointsConfig.keempat; pingat = "Ke-4";}
@@ -635,68 +584,6 @@
                 if(activeTab === "ramalan" && userRole === "admin") return generatePredictions();
                 return null;
             }, [activeTab, results, athletes, events, userRole, activeYear, housesMetadata, pointsConfig]);
-
-            const handleBackup = () => {
-                if(!checkAuth()) return;
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ athletes, events: events, results, heats, housesMetadata, records }));
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", `Sandaran_SPARK_${getCurrentFormattedDate()}.json`);
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-                createLog("Eksport Sandaran", "Membuat sandaran data kejohanan.");
-                showToastMessage("Fail sandaran dimuat turun!");
-            };
-
-            const handleRestoreClick = () => { if(!checkAuth()) return; if (fileInputRef.current) fileInputRef.current.click(); };
-
-            const handleRestoreBackup = async (e) => {
-                if(!checkAuth()) return;
-                const file = e.target.files[0]; if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        if (data.athletes) setAthletes(data.athletes);
-                        if (data.events) setEvents(data.events);
-                        if (data.results) setResults(data.results);
-                        if (data.records) setRecords(data.records);
-                        if (data.housesMetadata) setHousesMetadata(data.housesMetadata);
-
-                        if (isCloudActive && db) {
-                            if (data.athletes) for (const ath of data.athletes) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id).set(ath);
-                            if (data.events) for (const ev of data.events) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('events').doc(ev.id).set(ev);
-                            if (data.records) for (const rec of data.records) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('records').doc(rec.id).set(rec);
-                        }
-                        createLog("Import Sandaran", `Mengembalikan data daripada fail ${file.name}`);
-                        showToastMessage("Pangkalan data berjaya dipulihkan!", "success");
-                    } catch (err) { showToastMessage("Ralat membaca fail.", "error"); }
-                };
-                reader.readAsText(file);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-            };
-
-            const handleResetDatabase = () => {
-                if(!checkAuth()) return;
-                setConfirmModal({
-                    show: true, title: "Kosongkan Pangkalan Data?", message: "Tindakan ini akan memadamkan SEMUA rekod murid, keputusan, hebahan dan acara.",
-                    onConfirm: async () => {
-                        try {
-                            if (isCloudActive && db) {
-                                const refs = ['athletes', 'events', 'results', 'announcements', 'heats'];
-                                for (const col of refs) {
-                                    const snap = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection(col).get();
-                                    await Promise.all(snap.docs.map(doc => doc.ref.delete()));
-                                }
-                            } else { setAthletes([]); setEvents([]); setResults([]); setHeats([]); setAnnouncements([]); }
-                            createLog("Semula DB", "Menetapkan semula pangkalan data.");
-                            setConfirmModal({ show: false, title: "", message: "", onConfirm: null });
-                            showToastMessage("Pangkalan data dikosongkan.");
-                        } catch (e) { showToastMessage("Gagal.", "error"); }
-                    }
-                });
-            };
 
             const executeBypassPrint = (mode, targetData = null, options = {}) => {
                 setCurrentPrintMode(mode);
@@ -955,260 +842,6 @@
                             </table>
                         </div>
                     `;
-                } else if (mode === 'marshall' || mode === 'hakim_penamat') {
-                    const evAthletes = athletes.filter(a => a.acaraIds && a.acaraIds.includes(targetData.id)).sort((a,b) => a.nama.localeCompare(b.nama));
-                    const isBalapan = targetData.jenis === "Balapan";
-                    const isRelay = targetData.format === "Berkumpulan";
-                    
-                    let tableRows = "";
-                    let refRows = "";
-
-                    if (isRelay) {
-                        const teams = {};
-                        evAthletes.forEach(ath => {
-                            const rData = (ath.relayData && ath.relayData[targetData.id]) || { pasukan: "A", pelari: "1" };
-                            const tKey = `${ath.rumah}_${rData.pasukan}`;
-                            if (!teams[tKey]) teams[tKey] = { rumah: ath.rumah, pasukan: rData.pasukan, members: [] };
-                            teams[tKey].members.push({ nama: ath.nama, pelariNo: parseInt(rData.pelari) || 1 });
-                        });
-                        
-                        const teamsByHouse = {};
-                        Object.values(teams).forEach(t => {
-                            if (!teamsByHouse[t.rumah]) teamsByHouse[t.rumah] = [];
-                            teamsByHouse[t.rumah].push(t);
-                        });
-                        
-                        Object.keys(teamsByHouse).forEach(h => teamsByHouse[h].sort((a,b) => a.pasukan.localeCompare(b.pasukan)));
-                        
-                        const sortedTeams = [];
-                        let pIndex = 0;
-                        let pAdded = true;
-                        const sortedHouses = Object.keys(teamsByHouse).sort();
-                        
-                        while (pAdded) {
-                            pAdded = false;
-                            sortedHouses.forEach(h => {
-                                if (pIndex < teamsByHouse[h].length) {
-                                    sortedTeams.push(teamsByHouse[h][pIndex]);
-                                    pAdded = true;
-                                }
-                            });
-                            pIndex++;
-                        }
-                        
-                        if (mode === 'marshall') {
-                            tableRows = sortedTeams.map((t, i) => {
-                                const runnersStr = t.members.sort((x,y) => x.pelariNo - y.pelariNo).map(m => `P${m.pelariNo}: ${m.nama}`).join('<br/>');
-                                return `
-                                <tr>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${i+1}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">Lorong ${i+1}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-weight:bold;">Rumah ${t.rumah} (Pasukan ${t.pasukan})</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-transform: uppercase; font-size:10px;">${runnersStr}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px;"></td>
-                                </tr>
-                                `;
-                            }).join('');
-                        } else {
-                            refRows = sortedTeams.map((t, i) => {
-                                const runnersStr = t.members.sort((x,y) => x.pelariNo - y.pelariNo).map(m => `P${m.pelariNo}: ${m.nama}`).join('<br/>');
-                                return `<tr><td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center;">Lorong ${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 4px;"><strong>Rumah ${t.rumah} (Pasukan ${t.pasukan})</strong><br/>${runnersStr}</td></tr>`;
-                            }).join('');
-                            tableRows = Array.from({length: 8}, (_, i) => `
-                                <tr>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: bold;">Kedudukan ${i+1}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px;"></td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px;"></td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px;"></td>
-                                </tr>
-                            `).join('');
-                        }
-                    } else {
-                        if (mode === 'marshall') {
-                            tableRows = evAthletes.map((ath, i) => `
-                                <tr>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${i+1}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${isBalapan ? 'Lorong' : 'Giliran'} ${i+1}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-transform: uppercase;">${ath.nama}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${ath.kelas}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">Rumah ${ath.rumah}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 6px;"></td>
-                                </tr>
-                            `).join('');
-                        } else {
-                            refRows = evAthletes.map((ath, i) => `<tr><td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center;">Lorong ${i+1}</td><td style="border: 1px solid #cbd5e1; padding: 4px;">${ath.nama} (R.${ath.rumah})</td></tr>`).join('');
-                            tableRows = Array.from({length: 8}, (_, i) => `
-                                <tr>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-weight: bold;">Kedudukan ${i+1}</td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px;"></td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px;"></td>
-                                    <td style="border: 1px solid #cbd5e1; padding: 10px;"></td>
-                                </tr>
-                            `).join('');
-                        }
-                    }
-
-                    if (mode === 'marshall') {
-                        printContent = `
-                            <div style="font-family: sans-serif; padding: 20px;">
-                                ${headerHtml}
-                                <div style="margin-bottom: 20px; padding: 10px; background: #f8fafc; border: 1px solid #cbd5e1;">
-                                    <h2 style="margin:0 0 5px 0;">Borang Marshall (Panggilan Peserta)</h2>
-                                    <p style="margin:0;"><strong>Acara:</strong> [${targetData.kodAcara}] ${targetData.nama} (${targetData.kategori}) - ${targetData.format}</p>
-                                    <p style="margin:0;"><strong>Tarikh/Masa:</strong> ${formatDateToDMY(targetData.tarikh)} ${targetData.masa || 'N/A'}</p>
-                                </div>
-                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                                    <thead style="background: #f1f5f9;">
-                                        <tr>
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">No</th>
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">${isRelay ? 'Lorong' : (isBalapan ? 'Lorong' : 'Giliran')}</th>
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">${isRelay ? 'Pasukan Rumah Sukan' : 'Nama Peserta'}</th>
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">${isRelay ? 'Senarai Pelari' : 'Kelas'}</th>
-                                            ${!isRelay ? '<th style="border: 1px solid #cbd5e1; padding: 8px;">Rumah</th>' : ''}
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px; width: 100px;">Kehadiran / Tanda</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${tableRows || '<tr><td colspan="6" style="text-align:center; padding:10px;">Tiada peserta didaftarkan.</td></tr>'}</tbody>
-                                </table>
-                            </div>
-                        `;
-                    } else {
-                        printContent = `
-                            <div style="font-family: sans-serif; padding: 20px;">
-                                ${headerHtml}
-                                <div style="margin-bottom: 20px; padding: 10px; background: #fff1f2; border: 1px solid #fecdd3;">
-                                    <h2 style="margin:0 0 5px 0; color: #be123c;">Borang Hakim Penamat (Balapan)</h2>
-                                    <p style="margin:0;"><strong>Acara:</strong> [${targetData.kodAcara}] ${targetData.nama} (${targetData.kategori}) - ${targetData.format}</p>
-                                </div>
-                                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                                    <div style="flex: 1;">
-                                        <h4 style="margin: 0 0 10px 0;">Keputusan Rasmi</h4>
-                                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                                            <thead style="background: #f1f5f9;">
-                                                <tr>
-                                                    <th style="border: 1px solid #cbd5e1; padding: 8px;">Kedudukan</th>
-                                                    <th style="border: 1px solid #cbd5e1; padding: 8px;">Lorong / No. Bib</th>
-                                                    <th style="border: 1px solid #cbd5e1; padding: 8px;">Catatan Masa</th>
-                                                    <th style="border: 1px solid #cbd5e1; padding: 8px;">Tandatangan Hakim</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>${tableRows}</tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                } else if (mode === 'hakim_padang') {
-                    const evAthletes = athletes.filter(a => a.acaraIds && a.acaraIds.includes(targetData.id)).sort((a,b) => a.nama.localeCompare(b.nama));
-                    const rows = evAthletes.map((ath, i) => `
-                        <tr>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${i+1}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; text-transform: uppercase;">${ath.nama}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">Rumah ${ath.rumah}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px;"></td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px;"></td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px;"></td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; background: #f8fafc; font-weight: bold;"></td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; background: #f1f5f9; font-weight: bold;"></td>
-                        </tr>
-                    `).join('');
-                    printContent = `
-                        <div style="font-family: sans-serif; padding: 20px;">
-                            ${headerHtml}
-                            <div style="margin-bottom: 20px; padding: 10px; background: #ecfdf5; border: 1px solid #a7f3d0;">
-                                <h2 style="margin:0 0 5px 0; color: #047857;">Borang Hakim Padang</h2>
-                                <p style="margin:0;"><strong>Acara:</strong> [${targetData.kodAcara}] ${targetData.nama} (${targetData.kategori})</p>
-                            </div>
-                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                                <thead style="background: #f1f5f9;">
-                                    <tr>
-                                        <th style="border: 1px solid #cbd5e1; padding: 8px;" rowspan="2">Giliran</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 8px;" rowspan="2">Nama Peserta</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 8px;" rowspan="2">Rumah</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; text-align: center;" colspan="3">Cubaan Jarak / Tinggi</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 8px;" rowspan="2">Catatan<br>Terbaik</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 8px;" rowspan="2">Kedudukan</th>
-                                    </tr>
-                                    <tr>
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; font-weight: normal;">1</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; font-weight: normal;">2</th>
-                                        <th style="border: 1px solid #cbd5e1; padding: 4px; font-weight: normal;">3</th>
-                                    </tr>
-                                </thead>
-                                <tbody>${rows || '<tr><td colspan="8" style="text-align:center; padding:10px;">Tiada peserta didaftarkan.</td></tr>'}</tbody>
-                            </table>
-                        </div>
-                    `;
-                } else if (mode === 'hakim_lompat_tinggi' && targetData) {
-                    const ev = targetData;
-                    const registeredAthletes = (athletes || []).filter(a => a.acaraIds && a.acaraIds.includes(ev.id));
-                    const sortedAthletes = [...registeredAthletes].sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
-                    const rowCount = Math.max(15, sortedAthletes.length);
-                    let rowsHtml = '';
-                    for (let i = 0; i < rowCount; i++) {
-                        const ath = sortedAthletes[i];
-                        if (ath) {
-                            rowsHtml += `<tr style="height: 32px;"><td style="border: 1px solid #000; text-align: center; width: 30px;">${i + 1}</td><td style="border: 1px solid #000; text-align: center; width: 45px;"></td><td style="border: 1px solid #000; padding-left: 8px; text-align: left; text-transform: uppercase; width: auto;">${ath.nama}</td><td style="border: 1px solid #000; text-align: center; width: 65px;">${ath.rumah}</td><td style="border: 1px solid #000; width: 50px;"></td><td style="border: 1px solid #000; width: 50px;"></td><td style="border: 1px solid #000; width: 50px;"></td><td style="border: 1px solid #000; width: 50px;"></td><td style="border: 1px solid #000; width: 50px;"></td><td style="border: 1px solid #000; width: 65px;"></td><td style="border: 1px solid #000; width: 65px;"></td></tr>`;
-                        } else {
-                            rowsHtml += `<tr style="height: 32px;"><td style="border: 1px solid #000; text-align: center;">${i + 1}</td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td></tr>`;
-                        }
-                    }
-                    printContent = `
-                        <style>
-                            .lt-container { font-family: Arial, sans-serif; font-size: 10pt; color: #000; }
-                            .lt-header { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-                            .lt-logo { height: 50px; margin-right: 15px; }
-                            .lt-title { font-size: 13pt; font-weight: bold; margin: 0;}
-                            .lt-info-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10pt; }
-                            .lt-info-table td { border: 1px solid #000; padding: 5px; font-weight: bold; }
-                            .lt-info-label { width: 140px; background-color: #e9e9e9; }
-                            .lt-legend { border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 9pt; }
-                            .lt-main-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10pt; }
-                            .lt-main-table th, .lt-main-table td { border: 1px solid #000; }
-                            .lt-main-table th { background-color: #e9e9e9; padding: 5px; text-align: center; font-weight: bold; }
-                            .lt-footer { display: flex; justify-content: space-between; font-size: 8.5pt; }
-                            .lt-rules { width: 45%; }
-                            .lt-rules ol { margin: 3px 0 0 0; padding-left: 18px; }
-                            .lt-sigs { width: 50%; display: flex; justify-content: space-between; gap: 10px; }
-                            .lt-sig-box { width: 30%; text-align: left; display: flex; flex-direction: column; justify-content: flex-end; }
-                            .lt-sig-line { border-bottom: 1px solid #000; margin-bottom: 3px; height: 30px; }
-                        </style>
-                        <div class="lt-container">
-                            <div class="lt-header">
-                                <img src="${logoUrl}" class="lt-logo" onerror="this.style.display='none'" />
-                                <div class="lt-title">BORANG CATATAN HAKIM - ACARA LOMPAT TINGGI</div>
-                            </div>
-                            <table class="lt-info-table">
-                                <tr><td class="lt-info-label">KEJOHANAN</td><td colspan="3" style="text-transform: uppercase;">${activeSchoolSubtitle} ${activeSchoolName} ${activeYear}</td></tr>
-                                <tr><td class="lt-info-label">KATEGORI / KELAS</td><td>${ev.kategori}</td><td class="lt-info-label" style="width: 100px;">TARIKH</td><td>${formatDateToDMY(ev.tarikh)}</td></tr>
-                            </table>
-                            <div class="lt-legend">PETUNJUK: [ O ] Sah | [ X ] Gagal | [ - ] Pass</div>
-                            <table class="lt-main-table">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2" style="width: 30px;">BIL</th>
-                                        <th rowspan="2" style="width: 45px;">NO.<br>PES.</th>
-                                        <th rowspan="2" style="text-align: left; padding-left: 8px;">NAMA PESERTA</th>
-                                        <th rowspan="2" style="width: 65px;">PASUKAN</th>
-                                        <th colspan="5">KETINGGIAN PALANG (m)</th>
-                                        <th rowspan="2" style="width: 65px;">TERBAIK</th>
-                                        <th rowspan="2" style="width: 65px;">KED.</th>
-                                    </tr>
-                                    <tr><th style="height: 22px;"></th><th></th><th></th><th></th><th></th></tr>
-                                </thead>
-                                <tbody>${rowsHtml}</tbody>
-                            </table>
-                            <div class="lt-footer">
-                                <div class="lt-rules"><strong>Countback:</strong><ol><li>Jumlah kegagalan (X) paling sedikit pada ketinggian pemenang.</li><li>Jumlah kegagalan (X) keseluruhan paling sedikit.</li></ol></div>
-                                <div class="lt-sigs">
-                                    <div class="lt-sig-box"><div class="lt-sig-line"></div>KETUA HAKIM</div>
-                                    <div class="lt-sig-box"><div class="lt-sig-line"></div>REFERI</div>
-                                    <div class="lt-sig-box"><div class="lt-sig-line"></div>PENCATAT</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
                 } else if (mode === 'sijil') {
                     const athResults = results.filter(r => {
                         if (r.athleteId === targetData.id) return true;
@@ -1335,107 +968,27 @@
                         const content = editableDiv.innerHTML;
                         localStorage.setItem('sps_kokum_manual', content);
                         setKokumManualText(content);
-
-                        if (gasUrl) {
-                            try {
-                                showToastMessage("Menyimpan ke Google Sheets...", "info");
-                                const response = await fetch(gasUrl, {
-                                    method: 'POST',
-                                    mode: 'no-cors',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ action: 'saveKokumManual', content, year: activeYear })
-                                });
-                                showToastMessage("Laporan manual berjaya disimpan ke Google Sheets!");
-                            } catch (err) {
-                                console.error(err);
-                                showToastMessage("Disimpan secara lokal. Gagal hubungkan ke Google Sheets.", "error");
-                            }
-                        } else {
-                            showToastMessage("Maklumat tambahan laporan disimpan secara lokal!");
-                        }
+                        showToastMessage("Maklumat tambahan laporan disimpan secara lokal!");
                     }
                 }
             };
 
-            const handleHouseSubmit = async (e) => {
-                e.preventDefault(); if (!checkAuth()) return;
-                const updated = { ...housesMetadata };
-                const newObj = { slogan: houseForm.slogan, guruPenasihat: houseForm.guruPenasihat, bonusPoints: houseForm.bonusPoints, warnaLabel: houseForm.warnaLabel };
-                if (isEditingHouse && originalHouseKey !== houseForm.nama) delete updated[originalHouseKey];
-                updated[houseForm.nama] = newObj;
-                
-                if (isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('houses').set(updated);
-                else setHousesMetadata(updated);
-                
-                setIsHouseSidebarOpen(false); showToastMessage("Rumah sukan disimpan!");
-            };
-
-            const handleEventSubmit = async (e) => {
-                e.preventDefault(); if (!checkAuth()) return;
-                const id = eventForm.id || "E_" + Date.now();
-                const evData = { ...eventForm, id };
-                if (isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('events').doc(id).set(evData);
-                else setEvents(prev => isEditingEvent ? prev.map(x => x.id === id ? evData : x) : [...prev, evData]);
-                setIsEventSidebarOpen(false); showToastMessage("Acara disimpan!");
-            };
-
-            const handleAthleteSubmit = async (e) => {
-                e.preventDefault(); if (!checkAuth()) return;
-                if (!athleteForm.nama || athleteForm.nama.trim() === "") { showToastMessage("Sila pastikan ruangan nama tidak kosong.", "error"); return; }
-                const id = athleteForm.id || "A_" + Date.now();
-                const athData = { ...athleteForm, id, nama: athleteForm.nama.trim().toUpperCase() };
-                if (isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(id).set(athData);
-                else setAthletes(prev => isEditingAthlete ? prev.map(x => x.id === id ? athData : x) : [...prev, athData]);
-                setIsAddAthleteSidebarOpen(false); showToastMessage("Atlet disimpan!");
-            };
-
-            const handleBulkImportSubmit = async (e) => {
-                e.preventDefault();
+            const handleToggleRegistration = async (athId, eventId, isCurrentlyRegistered) => {
                 if (!checkAuth()) return;
-                if (!bulkText.trim()) { showToastMessage("Sila masukkan senarai nama atlet.", "error"); return; }
+                const ath = athletes.find(a => a.id === athId);
+                if (!ath) return;
+                let newAcaraIds = ath.acaraIds || [];
+                if (isCurrentlyRegistered) {
+                    newAcaraIds = newAcaraIds.filter(id => id !== eventId);
+                } else {
+                    newAcaraIds.push(eventId);
+                }
                 
-                const lines = bulkText.split('\n').filter(line => line.trim() !== "");
-                let addedCount = 0;
-                let newAthletesList = [...athletes];
-
-                for (const line of lines) {
-                    const parts = line.split(/[,|\t]/).map(p => p.trim());
-                    if (parts.length >= 1 && parts[0] !== "") {
-                        const nama = parts[0].toUpperCase();
-                        const kelas = parts[1] ? parts[1].toUpperCase() : "6 AMANAH";
-                        const rawJantina = parts[2] ? parts[2].toLowerCase() : "lelaki";
-                        const jantina = (rawJantina.startsWith('p') || rawJantina.startsWith('f')) ? "Perempuan" : "Lelaki";
-                        const kategori = parts[3] ? parts[3].toUpperCase() : categories[0];
-
-                        let rumahParsed = bulkHouse;
-                        if (parts[4]) {
-                            const rawR = parts[4].trim();
-                            rumahParsed = rawR.charAt(0).toUpperCase() + rawR.slice(1).toLowerCase();
-                            if (!housesMetadata[rumahParsed]) {
-                                const matched = Object.keys(housesMetadata).find(k => k.toLowerCase() === rawR.toLowerCase());
-                                if (matched) rumahParsed = matched;
-                            }
-                        }
-
-                        const id = "A_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-                        const athData = { id, nama, kelas, rumah: rumahParsed, jantina, kategori, acaraIds: [], relayData: {} };
-
-                        newAthletesList.push(athData);
-                        if (isCloudActive && db) {
-                            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(id).set(athData);
-                        }
-                        addedCount++;
-                    }
+                if (isCloudActive && db) {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(athId).update({ acaraIds: newAcaraIds });
+                } else {
+                    setAthletes(athletes.map(a => a.id === athId ? { ...a, acaraIds: newAcaraIds } : a));
                 }
-
-                if (!isCloudActive) {
-                    setAthletes(newAthletesList);
-                }
-
-                createLog("Import Pukal Atlet", `Berjaya menambah ${addedCount} orang atlet ke Rumah ${bulkHouse}`);
-                showToastMessage(`Berjaya mendaftarkan ${addedCount} orang atlet secara pukal!`);
-                setIsBulkModalOpen(false);
-                setBulkText("");
             };
 
             const handleResultSubmit = async (e) => {
@@ -1446,19 +999,10 @@
                 
                 if (isCloudActive && db) {
                     await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('results').doc(id).set(resData);
-                    await createLog("Kunci Keputusan", `Atlet ID ${resultForm.athleteId} mendapat kedudukan ${resultForm.kedudukan} untuk acara ${resultForm.eventId}`);
+                    await createLog("Kunci Keputusan", `Atlet ID ${resultForm.athleteId} mendapat kedudukan ${resultForm.kedudukan}`);
                 }
                 else setResults(prev => [...prev, resData]);
                 setResultForm(prev => ({...prev, athleteId: "", catatan: ""})); showToastMessage("Keputusan disimpan!");
-            };
-
-            const handleRecordSubmit = async (e) => {
-                e.preventDefault(); if (!checkAuth()) return;
-                const id = recordForm.id || "REC_" + Date.now();
-                const recData = { ...recordForm, id };
-                if (isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('records').doc(id).set(recData);
-                else setRecords(prev => recordForm.id ? prev.map(x => x.id === id ? recData : x) : [...prev, recData]);
-                setShowRecordForm(false); showToastMessage("Rekod disimpan ke arkib!");
             };
 
             const TABS = [
@@ -1473,7 +1017,7 @@
 
             return (
                 <div className="min-h-screen flex flex-col bg-slate-50">
-                    <input type="file" ref={fileInputRef} onChange={handleRestoreBackup} accept=".json" className="hidden" />
+                    <input type="file" ref={fileInputRef} accept=".json" className="hidden" />
                     
                     {isSystemLocked && (
                         <div className="bg-red-600 text-white text-center py-1.5 px-4 text-[11px] font-bold tracking-widest uppercase shadow-md sticky top-0 z-[100]">
@@ -1495,18 +1039,6 @@
                                 {userRole === "admin" && (
                                     <div className="relative inline-block" ref={adminMenuRef}>
                                         <button onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)} className="bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-black px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow-sm">🛠️ PANEL PENTADBIR</button>
-                                        {isAdminMenuOpen && (
-                                            <div className="absolute left-0 mt-2 w-[260px] max-w-[95vw] bg-white rounded-2xl shadow-2xl border py-2 text-slate-800 z-[9999] overflow-hidden">
-                                                <button onClick={() => { setShowLockModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-red-50 text-xs font-semibold text-red-700">🔒 Kunci Sistem (Read-Only)</button>
-                                                <button onClick={() => { setShowDiagModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">ℹ️ Info Diag</button>
-                                                <button onClick={() => { setShowAdminManagerModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">👥 Pengurusan Admin Tambahan</button>
-                                                <button onClick={() => { setShowPointsModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">⚙️ Tetapan Kategori & Mata</button>
-                                                <button onClick={() => { setShowSchoolSetupModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">🏫 Tetapan Sekolah Baharu</button>
-                                                <button onClick={() => { handleBackup(); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-emerald-50 text-xs font-semibold text-emerald-700">📥 Sandaran Data (JSON)</button>
-                                                <button onClick={() => { handleRestoreClick(); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-amber-50 text-xs font-semibold text-amber-700">📤 Muat Naik Sandaran</button>
-                                                <button onClick={() => { handleResetDatabase(); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-red-50 text-xs font-semibold text-red-600">🔄 Kosongkan DB</button>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                                 {currentUser && !currentUser.isAnonymous ? (
@@ -1556,34 +1088,16 @@
                                         </div>
                                     ))}
                                 </div>
+                                
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     <div className="bg-white p-5 border rounded-2xl h-[400px] flex flex-col shadow-sm">
                                         <div className="flex justify-between items-center border-b pb-2 mb-3 shrink-0">
                                             <h3 className="font-bold">📢 Hebahan Semasa</h3>
-                                            {userRole !== "pelawat" && <button onClick={() => setShowAnnounceForm(!showAnnounceForm)} className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-100 transition">+ Hebahan</button>}
                                         </div>
-                                        {showAnnounceForm && (
-                                            <form onSubmit={(e) => {
-                                                e.preventDefault();
-                                                if(!checkAuth()) return;
-                                                const ann = { id: "ann_"+Date.now(), text: announceFormText, date: getCurrentFormattedDate(), author: currentUser?.displayName || "Pentadbir" };
-                                                if (isCloudActive && db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('announcements').doc(ann.id).set(ann);
-                                                else setAnnouncements([ann, ...announcements]);
-                                                setAnnounceFormText(""); setShowAnnounceForm(false); showToastMessage("Hebahan ditambah");
-                                            }} className="mb-4 shrink-0">
-                                                <textarea required value={announceFormText} onChange={e => setAnnounceFormText(e.target.value)} className="w-full border rounded-xl p-2 text-xs" rows="2" placeholder="Tulis hebahan..."></textarea>
-                                                <button type="submit" className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs mt-2 font-bold shadow">Hantar</button>
-                                            </form>
-                                        )}
                                         <div className="space-y-3 overflow-y-auto pr-2 flex-1">
                                             {announcements.map(a => (
                                                 <div key={a.id} className="bg-amber-50 p-3 rounded-xl text-xs border border-amber-100 flex justify-between shadow-sm">
                                                     <div><p className="font-medium">{a.text}</p><p className="text-[10px] text-slate-500 mt-1">Oleh: {a.author} | {a.date}</p></div>
-                                                    {userRole !== "pelawat" && <button onClick={() => {
-                                                        if(!checkAuth()) return;
-                                                        if(isCloudActive && db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('announcements').doc(a.id).delete();
-                                                        else setAnnouncements(announcements.filter(x=>x.id!==a.id));
-                                                    }} className="text-red-500 font-bold ml-2 hover:scale-110 transition">✕</button>}
                                                 </div>
                                             ))}
                                             {announcements.length === 0 && <p className="text-slate-400 italic text-center pt-4 text-xs">Tiada hebahan semasa.</p>}
@@ -1602,27 +1116,17 @@
                                                     const todayDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
                                                     const isToday = ev.tarikh === todayDateStr;
                                                     
-                                                    let statusText = "Akan Datang";
-                                                    let statusColor = "bg-slate-100 text-slate-600";
-                                                    
-                                                    if (isSelesai) {
-                                                        statusText = "Selesai";
-                                                        statusColor = "bg-emerald-100 text-emerald-700";
-                                                    } else if (isToday) {
-                                                        statusText = "Hari Ini";
-                                                        statusColor = "bg-amber-100 text-amber-700 animate-pulse";
-                                                    }
+                                                    let statusText = "Akan Datang"; let statusColor = "bg-slate-100 text-slate-600";
+                                                    if (isSelesai) { statusText = "Selesai"; statusColor = "bg-emerald-100 text-emerald-700"; } 
+                                                    else if (isToday) { statusText = "Hari Ini"; statusColor = "bg-amber-100 text-amber-700 animate-pulse"; }
 
                                                     return (
                                                         <div key={ev.id} className="border-l-2 border-indigo-400 pl-3 py-1">
                                                             <div className="flex justify-between items-start">
                                                                 <p className="font-bold text-[11px] text-indigo-900 leading-tight">
-                                                                    <span className="text-[9px] text-slate-500 mr-1">[{ev.kodAcara}]</span>
-                                                                    {ev.nama}
+                                                                    <span className="text-[9px] text-slate-500 mr-1">[{ev.kodAcara}]</span>{ev.nama}
                                                                 </p>
-                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded ml-2 whitespace-nowrap ${statusColor}`}>
-                                                                    {statusText}
-                                                                </span>
+                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded ml-2 whitespace-nowrap ${statusColor}`}>{statusText}</span>
                                                             </div>
                                                             <div className="flex justify-between items-center mt-1">
                                                                 <p className="text-[10px] font-medium text-slate-600">{ev.kategori}</p>
@@ -1637,62 +1141,16 @@
 
                                     <div className="bg-white p-5 border rounded-2xl h-[400px] flex flex-col shadow-sm">
                                         <div className="flex justify-between items-center border-b pb-2 mb-3 shrink-0">
-                                            <h3 className="font-bold">🏅 Pencapaian Terbaik</h3>
+                                            <h3 className="font-bold">📝 Log Aktiviti</h3>
                                         </div>
                                         <div className="overflow-y-auto space-y-4 pr-2 flex-1">
-                                            <div>
-                                                <div className="flex justify-between items-center bg-indigo-50 px-2 py-1 rounded mb-2">
-                                                    <h4 className="text-xs font-bold text-indigo-800">Olahragawan</h4>
-                                                    <select 
-                                                        value={bestAthleteMaleCat} 
-                                                        onChange={(e) => setBestAthleteMaleCat(e.target.value)}
-                                                        className="text-[10px] p-1 border rounded bg-white"
-                                                    >
-                                                        {categories.filter(c => !c.toUpperCase().startsWith('P')).map(c => <option key={c} value={c}>{c}</option>)}
-                                                    </select>
+                                            {logs.slice(0, 20).map(l => (
+                                                <div key={l.id} className="text-[11px] border-b pb-2 mb-2">
+                                                    <p className="font-bold text-slate-700">{l.action}</p>
+                                                    <p className="text-slate-500">{l.details}</p>
+                                                    <p className="text-[9px] text-slate-400 mt-1">{l.userName} • {l.timestamp}</p>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    {calculateBest("Lelaki", bestAthleteMaleCat).slice(0,3).map((ath, idx) => (
-                                                        <div key={ath.id} className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg text-xs">
-                                                            <div className={`w-6 h-6 flex items-center justify-center rounded-full text-white font-bold text-[10px] ${idx===0 ? 'bg-yellow-400' : idx===1 ? 'bg-slate-400' : 'bg-amber-600'}`}>
-                                                                {idx+1}
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <p className="font-bold leading-tight">{ath.nama}</p>
-                                                                <p className="text-[9px] text-slate-500">Rumah {ath.rumah} | {ath.g}E {ath.s}P {ath.b}G</p>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                    {calculateBest("Lelaki", bestAthleteMaleCat).length === 0 && <p className="text-[10px] text-slate-400 italic text-center">Tiada data</p>}
-                                                </div>
-                                            </div>
-                                            
-                                            <div>
-                                                <div className="flex justify-between items-center bg-pink-50 px-2 py-1 rounded mb-2">
-                                                    <h4 className="text-xs font-bold text-pink-800">Olahragawati</h4>
-                                                    <select 
-                                                        value={bestAthleteFemaleCat} 
-                                                        onChange={(e) => setBestAthleteFemaleCat(e.target.value)}
-                                                        className="text-[10px] p-1 border rounded bg-white"
-                                                    >
-                                                        {categories.filter(c => !c.toUpperCase().startsWith('L')).map(c => <option key={c} value={c}>{c}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    {calculateBest("Perempuan", bestAthleteFemaleCat).slice(0,3).map((ath, idx) => (
-                                                        <div key={ath.id} className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg text-xs">
-                                                            <div className={`w-6 h-6 flex items-center justify-center rounded-full text-white font-bold text-[10px] ${idx===0 ? 'bg-yellow-400' : idx===1 ? 'bg-slate-400' : 'bg-amber-600'}`}>
-                                                                {idx+1}
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <p className="font-bold leading-tight">{ath.nama}</p>
-                                                                <p className="text-[9px] text-slate-500">Rumah {ath.rumah} | {ath.g}E {ath.s}P {ath.b}G</p>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                    {calculateBest("Perempuan", bestAthleteFemaleCat).length === 0 && <p className="text-[10px] text-slate-400 italic text-center">Tiada data</p>}
-                                                </div>
-                                            </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -1702,55 +1160,27 @@
                         {}
                         {activeTab === "rumah_sukan" && userRole !== "pelawat" && (
                             <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in relative">
-                                <div className="flex justify-between items-center mb-6 pb-4 border-b">
-                                    <h2 className="text-xl font-black text-slate-800">Pengurusan Rumah Sukan</h2>
-                                    {(userRole === "admin" || userRole === "urusetia") && (
-                                        <button onClick={() => { setHouseForm({ nama: "", slogan: "", guruPenasihat: "", bonusPoints: 0, warnaLabel: "Ungu" }); setIsEditingHouse(false); setIsHouseSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition">+ Tambah Rumah Sukan</button>
-                                    )}
-                                </div>
+                                <h2 className="text-xl font-black text-slate-800 mb-6 pb-4 border-b">Pengurusan Rumah Sukan</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {Object.entries(housesMetadata).map(([nama, data]) => {
                                         const hAthletes = athletes.filter(a => a.rumah === nama);
                                         const preset = COLOR_PRESETS[data.warnaLabel || "Merah"];
-                                        const advisors = (data.guruPenasihat || "").split('\n').filter(l => l.trim());
-                                        
                                         return (
                                             <div key={nama} className={`border rounded-2xl p-5 relative overflow-hidden transition hover:-translate-y-1 ${preset.glow}`}>
                                                 <div className={`absolute top-0 left-0 w-full h-2 ${preset.warna}`}></div>
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div>
                                                         <h3 className={`text-xl font-black ${preset.text}`}>Rumah {nama}</h3>
-                                                        <p className="text-xs text-slate-500 font-medium italic mt-1">"{data.slogan || 'Tiada Slogan'}"</p>
                                                     </div>
                                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg ${preset.bg} ${preset.text} shadow-sm`}>
                                                         {nama.charAt(0).toUpperCase()}
                                                     </div>
                                                 </div>
-                                                
                                                 <div className="bg-white/60 p-3 rounded-xl border border-white mb-4 space-y-2">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-xs font-bold text-slate-600">Jumlah Ahli:</span>
                                                         <span className="text-sm font-black bg-slate-800 text-white px-2 py-0.5 rounded-lg">{hAthletes.length}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-xs font-bold text-slate-600">Mata Bonus:</span>
-                                                        <span className="text-sm font-black text-emerald-600">+{data.bonusPoints || 0}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mb-4">
-                                                    <h4 className="text-xs font-bold text-slate-700 mb-2 border-b pb-1">Guru Penasihat:</h4>
-                                                    <ul className="text-[11px] space-y-1 text-slate-600 h-16 overflow-y-auto">
-                                                        {advisors.length > 0 ? advisors.map((g, i) => <li key={i} className="flex items-center gap-1">▪️ {g}</li>) : <li className="italic text-slate-400">Belum ditetapkan</li>}
-                                                    </ul>
-                                                </div>
-
-                                                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100">
-                                                    {(userRole === "admin" || userRole === "urusetia") && (
-                                                        <button onClick={() => { setOriginalHouseKey(nama); setHouseForm({ nama, ...data }); setIsEditingHouse(true); setIsHouseSidebarOpen(true); }} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-bold transition">Kemaskini</button>
-                                                    )}
-                                                    <button onClick={() => { setSelectedMembersHouse(nama); setShowMembersModal(true); }} className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-xl text-xs font-bold transition">Senarai Ahli</button>
-                                                    <button onClick={() => executeBypassPrint('kehadiran_rumah', { houseName: nama })} className="w-10 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center font-bold transition" title="Cetak Borang Kehadiran">🖨️</button>
                                                 </div>
                                             </div>
                                         );
@@ -1765,19 +1195,6 @@
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b gap-4">
                                     <h2 className="text-xl font-black text-slate-800">Pengurusan Acara Sukan</h2>
                                     <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                                        {(userRole === "admin" || userRole === "urusetia") && (
-                                            <>
-                                                <button onClick={() => {
-                                                    setEventForm({ id: "", noAcara: "", nama: "", kategori: categories[0] || "L12TKB", jenis: "Balapan", format: "Individu", tarikh: "", masa: "" });
-                                                    setIsEditingEvent(false); setIsEventSidebarOpen(true);
-                                                }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">
-                                                    + Tambah Acara
-                                                </button>
-                                                <button onClick={() => executeBypassPrint('semua_keputusan')} className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">
-                                                    🖨️ Cetak Semua Keputusan
-                                                </button>
-                                            </>
-                                        )}
                                         <select value={selectedEventDate} onChange={(e) => setSelectedEventDate(e.target.value)} className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 focus:border-indigo-500 outline-none">
                                             <option value="Semua">Semua Tarikh</option>
                                             {uniqueEventDates.map(d => <option key={d} value={d}>{formatDateToDMY(d)}</option>)}
@@ -1792,55 +1209,24 @@
                                                 <th className="px-4 py-3">Kod</th>
                                                 <th className="px-4 py-3">Nama Acara</th>
                                                 <th className="px-4 py-3">Kategori</th>
-                                                <th className="px-4 py-3">Format</th>
-                                                <th className="px-4 py-3">Tarikh/Masa</th>
                                                 <th className="px-4 py-3 text-center">Tindakan</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {eventsWithCode.filter(ev => selectedEventDate === "Semua" || ev.tarikh === selectedEventDate).length === 0 ? (
-                                                <tr><td colSpan="7" className="text-center py-8 text-slate-400 italic">Tiada acara didaftarkan untuk tarikh ini.</td></tr>
-                                            ) : (
-                                                eventsWithCode.filter(ev => selectedEventDate === "Semua" || ev.tarikh === selectedEventDate).map((ev, index) => {
-                                                    const isSelesai = results.some(r => r.eventId === ev.id);
-                                                    return (
-                                                        <tr key={ev.id} className="border-b hover:bg-slate-50 transition">
-                                                            <td className="px-4 py-3 font-bold text-slate-400">{index + 1}</td>
-                                                            <td className="px-4 py-3 font-mono font-bold text-indigo-600">{ev.kodAcara}</td>
-                                                            <td className="px-4 py-3 font-bold">{ev.nama} {isSelesai && <span className="ml-2 text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider">Selesai</span>}</td>
-                                                            <td className="px-4 py-3"><span className="bg-slate-200 px-2 py-1 rounded text-xs font-semibold">{ev.kategori}</span></td>
-                                                            <td className="px-4 py-3"><span className={`px-2 py-1 rounded text-xs font-bold ${ev.format==='Berkumpulan' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{ev.format}</span></td>
-                                                            <td className="px-4 py-3 text-xs text-slate-500">{formatDateToDMY(ev.tarikh)} <br/> {ev.masa}</td>
-                                                            <td className="px-4 py-3 text-center space-x-1 whitespace-nowrap">
-                                                                <button onClick={() => { setActiveRegEvent(ev); setRegModalHouseFilter("Semua"); setRegModalCategoryFilter("Semua"); setIsEventRegModalOpen(true); }} className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-2 py-1 rounded text-[10px] font-bold transition">Daftar Atlet</button>
-                                                                <button onClick={() => executeBypassPrint('marshall', ev)} className="bg-amber-50 text-amber-600 hover:bg-amber-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Borang Marshall">BM</button>
-                                                                {ev.jenis === "Balapan" && <button onClick={() => executeBypassPrint('hakim_penamat', ev)} className="bg-pink-50 text-pink-600 hover:bg-pink-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Hakim Penamat">HP</button>}
-                                                                {ev.jenis === "Padang" && (ev.nama.toLowerCase().includes("lompat tinggi") ? 
-                                                                    <button onClick={() => executeBypassPrint('hakim_lompat_tinggi', ev)} className="bg-teal-50 text-teal-600 hover:bg-teal-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Hakim Lompat Tinggi">HLT</button> :
-                                                                    <button onClick={() => executeBypassPrint('hakim_padang', ev)} className="bg-teal-50 text-teal-600 hover:bg-teal-100 px-2 py-1 rounded text-[10px] font-bold transition" title="Hakim Padang">HPdg</button>
-                                                                )}
-                                                                {(userRole === "admin" || userRole === "urusetia") && (
-                                                                    <>
-                                                                        <button onClick={() => { setEventForm(ev); setIsEditingEvent(true); setIsEventSidebarOpen(true); }} className="bg-slate-100 text-slate-600 hover:bg-slate-200 px-2 py-1 rounded text-[10px] font-bold transition">Ubah</button>
-                                                                        <button onClick={() => {
-                                                                            if(!checkAuth()) return;
-                                                                            setConfirmModal({
-                                                                                show: true, title: "Padam Acara", message: `Adakah anda pasti untuk memadam acara ${ev.nama}?`,
-                                                                                onConfirm: () => {
-                                                                                    if (isCloudActive && db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('events').doc(ev.id).delete();
-                                                                                    else setEvents(events.filter(e => e.id !== ev.id));
-                                                                                    setConfirmModal({ show: false, title: "", message: "", onConfirm: null });
-                                                                                    showToastMessage("Acara dipadam.");
-                                                                                }
-                                                                            });
-                                                                        }} className="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded text-[10px] font-bold transition">Padam</button>
-                                                                    </>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            )}
+                                            {eventsWithCode.filter(ev => selectedEventDate === "Semua" || ev.tarikh === selectedEventDate).map((ev, index) => {
+                                                const isSelesai = results.some(r => r.eventId === ev.id);
+                                                return (
+                                                    <tr key={ev.id} className="border-b hover:bg-slate-50 transition">
+                                                        <td className="px-4 py-3 font-bold text-slate-400">{index + 1}</td>
+                                                        <td className="px-4 py-3 font-mono font-bold text-indigo-600">{ev.kodAcara}</td>
+                                                        <td className="px-4 py-3 font-bold">{ev.nama} {isSelesai && <span className="ml-2 text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider">Selesai</span>}</td>
+                                                        <td className="px-4 py-3"><span className="bg-slate-200 px-2 py-1 rounded text-xs font-semibold">{ev.kategori}</span></td>
+                                                        <td className="px-4 py-3 text-center space-x-1 whitespace-nowrap">
+                                                            <button onClick={() => { setActiveRegEvent(ev); setRegModalHouseFilter("Semua"); setRegModalCategoryFilter("Semua"); setIsEventRegModalOpen(true); }} className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">Daftar Atlet Pusat</button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -1851,84 +1237,118 @@
                         {activeTab === "atlit" && userRole !== "pelawat" && (
                             <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in relative">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b gap-4">
-                                    <h2 className="text-xl font-black text-slate-800">Pengurusan Atlet</h2>
-                                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                                        <div className="relative flex-grow md:w-64">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">🔍</span>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Cari nama/kelas/rumah..." 
-                                                value={athleteSearchQuery}
-                                                onChange={(e) => setAthleteSearchQuery(e.target.value)}
-                                                className="w-full pl-10 pr-4 py-2 border-2 rounded-xl text-sm font-medium focus:border-indigo-500 outline-none"
-                                            />
-                                        </div>
-                                        <select value={athleteHouseFilter} onChange={(e) => setAthleteHouseFilter(e.target.value)} className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 outline-none">
-                                            <option value="Semua">Semua Rumah</option>
-                                            {Object.keys(housesMetadata).map(h => <option key={h} value={h}>{h}</option>)}
-                                        </select>
-                                        {(userRole === "admin" || userRole === "urusetia") && (
-                                            <>
-                                                <button onClick={() => { setAthleteForm({ id: "", nama: "", kelas: "", rumah: Object.keys(housesMetadata)[0]||"Merah", jantina: "Lelaki", kategori: categories[0] || "L12TKB" }); setIsEditingAthlete(false); setIsAddAthleteSidebarOpen(true); }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">+ Atlet</button>
-                                                <button onClick={() => setIsBulkModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition whitespace-nowrap">📥 Import Pukal</button>
-                                            </>
-                                        )}
-                                    </div>
+                                    <h2 className="text-xl font-black text-slate-800">Senarai Keseluruhan Atlet</h2>
                                 </div>
-
                                 <div className="overflow-x-auto rounded-xl border">
                                     <table className="w-full text-sm text-left">
                                         <thead className="bg-slate-100 text-slate-700 uppercase text-xs font-black">
                                             <tr>
-                                                <th className="px-4 py-3">No</th>
                                                 <th className="px-4 py-3">Nama Atlet</th>
                                                 <th className="px-4 py-3">Kelas / Tahun</th>
                                                 <th className="px-4 py-3">Rumah</th>
                                                 <th className="px-4 py-3">Kategori</th>
-                                                <th className="px-4 py-3 text-center">Tindakan</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {athletes.filter(a => {
-                                                const matchQ = a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.kelas.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.rumah.toLowerCase().includes(athleteSearchQuery.toLowerCase());
-                                                const matchH = athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter;
-                                                return matchQ && matchH;
-                                            }).length === 0 ? (
-                                                <tr><td colSpan="6" className="text-center py-8 text-slate-400 italic">Tiada atlet dijumpai.</td></tr>
-                                            ) : (
-                                                athletes.filter(a => {
-                                                    const matchQ = a.nama.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.kelas.toLowerCase().includes(athleteSearchQuery.toLowerCase()) || a.rumah.toLowerCase().includes(athleteSearchQuery.toLowerCase());
-                                                    const matchH = athleteHouseFilter === "Semua" || a.rumah === athleteHouseFilter;
-                                                    return matchQ && matchH;
-                                                }).map((ath, idx) => (
-                                                    <tr key={ath.id} className="border-b hover:bg-slate-50 transition">
-                                                        <td className="px-4 py-3 font-bold text-slate-400">{idx + 1}</td>
-                                                        <td className="px-4 py-3 font-bold">{ath.nama} <span className="text-[10px] text-slate-400 font-normal ml-1">({ath.jantina})</span></td>
-                                                        <td className="px-4 py-3 text-slate-600">{ath.kelas}</td>
-                                                        <td className="px-4 py-3"><span className={`px-2 py-1 rounded text-[10px] font-bold ${(COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel] || COLOR_PRESETS.Merah).bg} ${(COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel] || COLOR_PRESETS.Merah).text}`}>{ath.rumah}</span></td>
-                                                        <td className="px-4 py-3"><span className="bg-slate-200 px-2 py-1 rounded text-xs font-semibold">{ath.kategori}</span></td>
-                                                        <td className="px-4 py-3 text-center space-x-2 whitespace-nowrap">
-                                                            {(userRole === "admin" || userRole === "urusetia") && (
-                                                                <>
-                                                                    <button onClick={() => { setAthleteForm(ath); setIsEditingAthlete(true); setIsAddAthleteSidebarOpen(true); }} className="bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition">Ubah</button>
-                                                                    <button onClick={() => {
-                                                                        if(!checkAuth()) return;
-                                                                        setConfirmModal({
-                                                                            show: true, title: "Padam Atlet", message: `Padam ${ath.nama}?`,
-                                                                            onConfirm: () => {
-                                                                                if (isCloudActive && db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('athletes').doc(ath.id).delete();
-                                                                                else setAthletes(athletes.filter(a => a.id !== ath.id));
-                                                                                setConfirmModal({ show: false, title: "", message: "", onConfirm: null });
-                                                                                showToastMessage("Atlet dipadam.");
-                                                                            }
-                                                                        });
-                                                                    }} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">Padam</button>
-                                                                </>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
+                                            {athletes.slice(0, 20).map((ath, idx) => (
+                                                <tr key={ath.id} className="border-b hover:bg-slate-50 transition">
+                                                    <td className="px-4 py-3 font-bold">{ath.nama}</td>
+                                                    <td className="px-4 py-3 text-slate-600">{ath.kelas}</td>
+                                                    <td className="px-4 py-3"><span className={`px-2 py-1 rounded text-[10px] font-bold ${(COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel] || COLOR_PRESETS.Merah).bg} ${(COLOR_PRESETS[housesMetadata[ath.rumah]?.warnaLabel] || COLOR_PRESETS.Merah).text}`}>{ath.rumah}</span></td>
+                                                    <td className="px-4 py-3"><span className="bg-slate-200 px-2 py-1 rounded text-xs font-semibold">{ath.kategori}</span></td>
+                                                </tr>
+                                            ))}
+                                            {athletes.length === 0 && <tr><td colSpan="4" className="text-center py-8 text-slate-400 italic">Tiada atlet.</td></tr>}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {}
+                        {activeTab === "keputusan" && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in">
+                                <h2 className="text-xl font-black text-slate-800 mb-6 pb-4 border-b">Kemasukan Keputusan Acara</h2>
+                                <div className="max-w-2xl bg-slate-50 border p-6 rounded-2xl">
+                                    <form onSubmit={handleResultSubmit} className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 mb-1">Pilih Acara</label>
+                                            <select required value={resultForm.eventId} onChange={e => setResultForm({...resultForm, eventId: e.target.value})} className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-indigo-500 outline-none bg-white">
+                                                <option value="">-- Pilih Acara --</option>
+                                                {eventsWithCode.map(ev => <option key={ev.id} value={ev.id}>[{ev.kodAcara}] {ev.nama} ({ev.kategori})</option>)}
+                                            </select>
+                                        </div>
+                                        {resultForm.eventId && (
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-700 mb-1">Pilih Pemenang</label>
+                                                <select required value={resultForm.athleteId} onChange={e => setResultForm({...resultForm, athleteId: e.target.value})} className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 text-sm focus:border-indigo-500 outline-none bg-white">
+                                                    <option value="">-- Pilih Pemenang --</option>
+                                                    {athletes.filter(a => a.acaraIds && a.acaraIds.includes(resultForm.eventId)).map(ath => (
+                                                        <option key={ath.id} value={ath.id}>{ath.nama} (Rumah {ath.rumah})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-bold text-slate-700 mb-1">Kedudukan</label>
+                                                <select value={resultForm.kedudukan} onChange={e => setResultForm({...resultForm, kedudukan: e.target.value})} className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 text-sm outline-none bg-white">
+                                                    <option value="1">Pertama (Emas)</option><option value="2">Kedua (Perak)</option><option value="3">Ketiga (Gangsa)</option><option value="4">Keempat</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-bold text-slate-700 mb-1">Catatan (Masa/Jarak)</label>
+                                                <input type="text" value={resultForm.catatan} onChange={e => setResultForm({...resultForm, catatan: e.target.value})} className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 text-sm outline-none bg-white" placeholder="Cth: 12.4s" />
+                                            </div>
+                                        </div>
+                                        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition">Kunci Keputusan</button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {}
+                        {activeTab === "ramalan" && userRole === "admin" && predictions && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in">
+                                <h2 className="text-xl font-black text-slate-800 mb-6 pb-4 border-b">Ramalan Potensi Tahun Hadapan ({predictions.year})</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    {predictions.houses.map((h, i) => (
+                                        <div key={h.nama} className={`bg-white border p-4 rounded-2xl relative ${h.glow}`}>
+                                            <div className={`absolute top-0 left-0 w-full h-1.5 ${h.warna}`}></div>
+                                            <h3 className="font-black text-lg text-slate-800">Rumah {h.nama}</h3>
+                                            <p className={`text-2xl font-black ${h.teks}`}>{h.mata} Mata</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {}
+                        {activeTab === "pasca_sukan" && userRole !== "pelawat" && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b gap-4">
+                                    <h2 className="text-xl font-black text-slate-800">Pasca Sukan (Sijil & Laporan)</h2>
+                                    <button onClick={() => executeBypassPrint('kokum')} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md transition">🖨️ Cetak Laporan Rasmi</button>
+                                </div>
+                                <div className="overflow-x-auto rounded-xl border mt-6">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-slate-100 text-slate-700 uppercase text-xs font-black">
+                                            <tr>
+                                                <th className="px-4 py-3">Nama Atlet</th>
+                                                <th className="px-4 py-3">Pencapaian</th>
+                                                <th className="px-4 py-3 text-center">Cetak Sijil</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {athletes.filter(a => results.some(r => r.athleteId === a.id)).slice(0, 30).map((ath) => (
+                                                <tr key={ath.id} className="border-b hover:bg-slate-50 transition">
+                                                    <td className="px-4 py-3 font-bold">{ath.nama} <span className="block text-[10px] font-normal text-slate-500">Rumah {ath.rumah}</span></td>
+                                                    <td className="px-4 py-3 text-[10px] text-slate-600">Pemenang Pingat</td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <button onClick={() => executeBypassPrint('sijil', ath)} className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">Cetak Sijil</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>
@@ -1936,17 +1356,69 @@
                         )}
                     </main>
 
+                    {}
+                    {isEventRegModalOpen && activeRegEvent && (
+                        <div className="fixed inset-0 z-[9999] bg-slate-900/50 backdrop-blur-sm flex justify-center items-center p-4">
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                                <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                    <h2 className="text-xl font-black text-slate-800">Daftar Atlet: {activeRegEvent.nama}</h2>
+                                    <button onClick={() => setIsEventRegModalOpen(false)} className="text-slate-400 hover:text-red-500 font-bold">✕ Tutup</button>
+                                </div>
+                                <div className="flex flex-col md:flex-row gap-3 mb-4">
+                                    <select value={regModalHouseFilter} onChange={e => setRegModalHouseFilter(e.target.value)} className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 outline-none flex-1">
+                                        <option value="Semua">Semua Rumah Sukan</option>
+                                        {Object.keys(housesMetadata).map(h => <option key={h} value={h}>{h}</option>)}
+                                    </select>
+                                    <select value={regModalCategoryFilter} onChange={e => setRegModalCategoryFilter(e.target.value)} className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 outline-none flex-1">
+                                        <option value="Semua">Semua Kategori</option>
+                                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex-1 overflow-y-auto border rounded-xl p-2 bg-slate-50">
+                                    {athletes.filter(a => (regModalHouseFilter === "Semua" || a.rumah === regModalHouseFilter) && (regModalCategoryFilter === "Semua" || a.kategori === regModalCategoryFilter)).map(ath => {
+                                        const isRegistered = ath.acaraIds && ath.acaraIds.includes(activeRegEvent.id);
+                                        return (
+                                            <div key={ath.id} className="flex justify-between items-center p-2 border-b last:border-b-0 hover:bg-white transition rounded">
+                                                <div>
+                                                    <p className="font-bold text-sm text-slate-800">{ath.nama}</p>
+                                                    <p className="text-xs text-slate-500">{ath.kelas} | Rumah {ath.rumah} | {ath.kategori}</p>
+                                                </div>
+                                                <button onClick={() => handleToggleRegistration(ath.id, activeRegEvent.id, isRegistered)} className={`px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm ${isRegistered ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-emerald-600 text-white hover:bg-emerald-500'}`}>
+                                                    {isRegistered ? 'Batal' : 'Daftar'}
+                                                </button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {isPreviewModalOpen && (
-                        <div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 animate-fade-in">
-                            <div className="bg-slate-100 w-full max-w-5xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+                        <div className="fixed inset-0 z-[10000] bg-slate-900/80 backdrop-blur-sm flex flex-col md:flex-row items-center justify-center p-4 md:p-8 animate-fade-in">
+                            {currentPrintMode === 'sijil' && (
+                                <div className="bg-white rounded-2xl p-4 mr-0 mb-4 md:mb-0 md:mr-4 flex flex-row md:flex-col gap-4 shadow-2xl shrink-0 z-20">
+                                    <h3 className="text-xs font-bold text-center border-b pb-2 mb-1 hidden md:block text-slate-700">Kongsi</h3>
+                                    <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`} target="_blank" className="bg-emerald-500 flex items-center justify-center text-white w-12 h-12 rounded-full hover:scale-110 transition shadow-md" title="WhatsApp">
+                                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                    </a>
+                                    <a href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`} target="_blank" className="bg-sky-500 flex items-center justify-center text-white w-12 h-12 rounded-full hover:scale-110 transition shadow-md" title="Telegram">
+                                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                                    </a>
+                                    {navigator.share && (
+                                        <button onClick={() => navigator.share({ title: 'Pencapaian Sukan', text: shareText })} className="bg-indigo-500 flex items-center justify-center text-white w-12 h-12 rounded-full hover:scale-110 transition shadow-md" title="Share peranti...">
+                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                            <div className="bg-slate-100 w-full max-w-5xl h-[85vh] md:h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
                                 <div className="flex-1 w-full bg-slate-300/50 p-2 sm:p-6 overflow-hidden relative flex justify-center">
                                     <iframe id="preview-frame" srcDoc={previewContent} className="w-full h-full border-none sm:rounded-xl shadow-lg relative z-10" />
                                 </div>
-                                <div className="p-4 bg-white flex justify-end gap-3 text-xs font-bold border-t z-10">
+                                <div className="p-4 bg-white flex justify-end gap-3 text-xs font-bold border-t z-10 shrink-0">
                                     {currentPrintMode === 'kokum' && (
-                                        <button onClick={handleSaveKokumManualToCloud} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl shadow-lg transition mr-auto">
-                                            💾 Simpan Laporan Manual
-                                        </button>
+                                        <button onClick={handleSaveKokumManualToCloud} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl shadow-lg transition mr-auto">💾 Simpan Laporan Manual</button>
                                     )}
                                     <button onClick={()=>setIsPreviewModalOpen(false)} className="bg-slate-200 hover:bg-slate-300 px-6 py-3 rounded-xl transition">Tutup</button>
                                     <button onClick={()=>{const f=document.getElementById('preview-frame');if(f){f.contentWindow.focus();f.contentWindow.print();}}} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg transition">Cetak Dokumen</button>
@@ -1957,8 +1429,7 @@
 
                     {toast.show && (
                         <div className="fixed bottom-6 right-6 z-[10001] bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-3 animate-slide-up">
-                            {toast.type === "error" ? "⚠️" : "✅"}
-                            <span>{toast.message}</span>
+                            {toast.type === "error" ? "⚠️" : "✅"} <span>{toast.message}</span>
                         </div>
                     )}
                 </div>
