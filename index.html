@@ -229,6 +229,8 @@
 
             const [previewContent, setPreviewContent] = useState("");
             const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+            const [printTargetData, setPrintTargetData] = useState(null);
+            const [certAutoOpened, setCertAutoOpened] = useState(false);
             const [toast, setToast] = useState({ show: false, message: "", type: "info" });
             const [confirmModal, setConfirmModal] = useState({ show: false, title: "", message: "", onConfirm: null });
 
@@ -358,6 +360,33 @@
                     if (!bestAthleteFemaleCat) setBestAthleteFemaleCat(categories.find(c => !c.toUpperCase().startsWith('L')) || "");
                 }
             }, [categories]);
+
+            useEffect(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const certAthleteId = urlParams.get('cert');
+                
+                if (certAthleteId && !certAutoOpened && athletes.length > 0) {
+                    const ath = athletes.find(a => a.id === certAthleteId);
+                    if (ath) {
+                        // Beri masa 1 saat untuk memastikan rekod 'results' dan 'events' siap dimuat turun dari Firebase
+                        setTimeout(() => {
+                            executeBypassPrint('sijil', ath);
+                            setCertAutoOpened(true);
+                            // Buang parameter cert dari URL selepas dibuka supaya tidak berulang jika refresh
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }, 1000);
+                    } else {
+                        // Jika id ada tapi atlet tiada selepas data siap dimuat, mungkin id salah atau telah dipadam
+                        setTimeout(() => {
+                            if(!athletes.find(a => a.id === certAthleteId)) {
+                                showToastMessage("Maaf, Sijil / Rekod Atlet tidak dijumpai.", "error");
+                                setCertAutoOpened(true);
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            }
+                        }, 2000);
+                    }
+                }
+            }, [athletes, certAutoOpened]);
 
             useEffect(() => {
                 if (!currentUser) return;
@@ -700,6 +729,7 @@
 
             const executeBypassPrint = (mode, targetData = null, options = {}) => {
                 setCurrentPrintMode(mode);
+                setPrintTargetData(targetData);
                 let printContent = "";
                 const headerHtml = `
                     <div style="text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 15px; margin-bottom: 20px;">
@@ -1272,6 +1302,11 @@
                                     <p style="margin: 6px 0 0 0; font-weight: bold; text-transform: uppercase;">${certSignatory3Name}</p>
                                     <p style="margin: 0; color: #64748b;">${certSignatory3Title}</p>
                                 </div>` : ''}
+                            </div>
+                            
+                            <div style="position: absolute; bottom: 15px; left: 20px; text-align: left; font-family: sans-serif; font-size: 9px; color: #64748b; line-height: 1.4;">
+                                No. Siri Sijil / ID Semakan:<br>
+                                <span style="font-family: monospace; font-size: 11px; font-weight: bold; color: #334155;">${targetData.id}</span>
                             </div>
                         </div>
                     `;
@@ -2963,10 +2998,10 @@
                                     <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                                         {currentPrintMode === 'sijil' && (
                                             <React.Fragment>
-                                                <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("Tahniah! Sijil pencapaian sukan anda telah dijana: " + window.location.href)}`, '_blank')} className="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">💬 WhatsApp</button>
-                                                <button onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent("Sijil Pencapaian Sukan")}`, '_blank')} className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">✈️ Telegram</button>
+                                                <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("Tahniah! Sijil pencapaian sukan anda telah dijana: " + window.location.origin + window.location.pathname + "?cert=" + printTargetData?.id)}`, '_blank')} className="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">💬 WhatsApp</button>
+                                                <button onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin + window.location.pathname + "?cert=" + printTargetData?.id)}&text=${encodeURIComponent("Sijil Pencapaian Sukan")}`, '_blank')} className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">✈️ Telegram</button>
                                                 {navigator.share && (
-                                                    <button onClick={() => navigator.share({ title: 'Sijil Sukan', text: 'Sijil Pencapaian Sukan SPARK', url: window.location.href }).catch(e=>console.log(e))} className="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">🔗 Kongsi</button>
+                                                    <button onClick={() => navigator.share({ title: 'Sijil Sukan', text: 'Sijil Pencapaian Sukan SPARK', url: window.location.origin + window.location.pathname + "?cert=" + printTargetData?.id }).catch(e=>console.log(e))} className="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">🔗 Kongsi</button>
                                                 )}
                                             </React.Fragment>
                                         )}
