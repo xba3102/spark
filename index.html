@@ -224,6 +224,9 @@
             const [recordForm, setRecordForm] = useState({id:"", acara:"", kategori:categories[0]||"L12TKB", catatan:"", nama:"", tahun:activeYear});
             const [showRecordForm, setShowRecordForm] = useState(false);
 
+            const [verifyCertId, setVerifyCertId] = useState("");
+            const [verifyCertResult, setVerifyCertResult] = useState(null);
+
             const [kokumManualText, setKokumManualText] = useState(() => localStorage.getItem('sps_kokum_manual') || `<b>1. Kehadiran Tetamu / Jemputan:</b><br><br><br><b>2. Kewangan & Perbelanjaan:</b><br><br><br><b>3. Kekuatan Program:</b><br><br><br><b>4. Isu / Cabaran & Cadangan Penambahbaikan:</b><br><br><br>`);
             const [currentPrintMode, setCurrentPrintMode] = useState("");
 
@@ -1485,6 +1488,16 @@
                 setShowRecordForm(false); showToastMessage("Rekod disimpan ke arkib!");
             };
 
+            const handleVerifyCert = () => {
+                if (!verifyCertId.trim()) return;
+                const ath = athletes.find(a => a.id.toLowerCase() === verifyCertId.trim().toLowerCase());
+                if (ath) {
+                    setVerifyCertResult({ valid: true, data: ath });
+                } else {
+                    setVerifyCertResult({ valid: false });
+                }
+            };
+
             const TABS = [
                 { id: "dashboard", label: "Papan Pemuka", reqRoles: ["admin", "guru", "urusetia", "pelawat"] },
                 { id: "rumah_sukan", label: "Rumah Sukan", reqRoles: ["admin", "guru", "urusetia"] },
@@ -1988,6 +2001,35 @@
                                     </div>
                                 </div>
                                 
+                                {}
+                                <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4 mt-6">
+                                    <h3 className="font-bold border-b pb-2 flex items-center gap-2 text-indigo-900">🔍 Semakan Kesahihan Sijil</h3>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <input type="text" placeholder="Masukkan No. Siri Sijil / ID Semakan..." value={verifyCertId} onChange={e => setVerifyCertId(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleVerifyCert()} className="flex-1 border-2 border-slate-200 p-2.5 rounded-xl text-xs font-bold bg-slate-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+                                        <button onClick={handleVerifyCert} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md transition text-xs whitespace-nowrap">Semak Sijil</button>
+                                    </div>
+                                    {verifyCertResult && (
+                                        <div className={`p-4 rounded-xl border ${verifyCertResult.valid ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} text-xs mt-3 animate-fade-in`}>
+                                            {verifyCertResult.valid ? (
+                                                <div>
+                                                    <h4 className="font-black text-emerald-800 text-sm mb-2 flex items-center gap-2">✅ Sijil Disahkan Sah & Tepat</h4>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-emerald-900">
+                                                        <p className="font-semibold">Nama Penuh: <span className="font-bold uppercase">{verifyCertResult.data.nama}</span></p>
+                                                        <p className="font-semibold">Nama Kejohanan: <span className="font-bold uppercase">{activeSchoolSubtitle} {activeSchoolName} {activeYear}</span></p>
+                                                        <p className="font-semibold">Rumah Sukan: <span className="font-bold uppercase">Rumah {verifyCertResult.data.rumah}</span></p>
+                                                        <p className="font-semibold">Tarikh Pengesahan: <span className="font-bold">{getCurrentFormattedDate()}</span></p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <h4 className="font-black text-red-800 text-sm mb-1 flex items-center gap-2">❌ Sijil Tidak Dijumpai</h4>
+                                                    <p className="text-red-700 font-semibold">Sijil dengan ID <span className="font-mono bg-red-100 px-1 rounded">{verifyCertId}</span> tidak wujud dalam pangkalan data rasmi. Sila pastikan anda memasukkan ID semakan yang betul.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                                     <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
                                         <h3 className="font-bold border-b pb-2 flex items-center gap-2 text-indigo-900">🌟 Carian Olahragawan & Olahragawati</h3>
