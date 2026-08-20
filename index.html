@@ -1453,6 +1453,73 @@
                 setShowRecordForm(false); showToastMessage("Rekod disimpan ke arkib!");
             };
 
+            const handleAutoArchive = async () => {
+                if (!checkAuth()) return;
+                setConfirmModal({
+                    show: true,
+                    title: "Hantar Semua Johan Ke Arkib?",
+                    message: "Tindakan ini akan menyalin secara automatik SEMUA pemenang tempat PERTAMA (Johan) berserta catatan masa/jarak mereka ke dalam Arkib Rekod Sekolah untuk tahun " + activeYear + ".",
+                    onConfirm: async () => {
+                        const batchRecords = [];
+                        let skippedCount = 0;
+
+                        results.forEach(r => {
+                            if (r.kedudukan === "1") {
+                                const ev = events.find(e => e.id === r.eventId);
+                                if (!ev) return;
+
+                                let athName = "";
+                                if (r.athleteId && r.athleteId.startsWith("TEAM_")) {
+                                    const parts = r.athleteId.split('_');
+                                    athName = `PASUKAN ${parts[2]} (RUMAH ${parts[1]})`;
+                                } else {
+                                    const ath = athletes.find(a => a.id === r.athleteId);
+                                    if (ath) athName = ath.nama;
+                                }
+
+                                // Semak jika rekod yang sama sudah ada di dalam arkib tahun ini (Elak duplikasi)
+                                const recExists = records.some(rec => rec.acara === ev.nama && rec.kategori === ev.kategori && rec.tahun === activeYear && rec.nama === athName);
+                                
+                                if (!recExists) {
+                                    const recId = "REC_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+                                    batchRecords.push({
+                                        id: recId,
+                                        acara: ev.nama,
+                                        kategori: ev.kategori,
+                                        catatan: r.catatan || "-",
+                                        nama: athName,
+                                        tahun: activeYear
+                                    });
+                                } else {
+                                    skippedCount++;
+                                }
+                            }
+                        });
+
+                        if (batchRecords.length === 0) {
+                            setConfirmModal({ show: false, title: "", message: "", onConfirm: null });
+                            showToastMessage(skippedCount > 0 ? "Semua rekod Johan sudah berada di dalam arkib." : "Tiada keputusan Johan dijumpai untuk dihantar.", "error");
+                            return;
+                        }
+
+                        if (isCloudActive && db) {
+                            const batch = db.batch();
+                            batchRecords.forEach(rec => {
+                                const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('records').doc(rec.id);
+                                batch.set(ref, rec);
+                            });
+                            await batch.commit();
+                        } else {
+                            setRecords(prev => [...prev, ...batchRecords]);
+                        }
+
+                        createLog("Arkib Auto", `Berjaya menghantar ${batchRecords.length} rekod Johan ke arkib.`);
+                        setConfirmModal({ show: false, title: "", message: "", onConfirm: null });
+                        showToastMessage(`Berjaya menyimpan ${batchRecords.length} rekod Johan ke arkib!`);
+                    }
+                });
+            };
+
             const handleVerifyCert = () => {
                 if (!verifyCertId.trim()) return;
                 const ath = athletes.find(a => a.id.toLowerCase() === verifyCertId.trim().toLowerCase());
@@ -2108,7 +2175,12 @@
                                     <div className="bg-white border rounded-2xl p-5 shadow-sm flex flex-col">
                                         <div className="flex justify-between items-center border-b pb-2 mb-3">
                                             <h3 className="font-bold flex items-center gap-2 text-amber-800">🏆 Arkib Rekod Kejohanan</h3>
-                                            {userRole !== "pelawat" && <button onClick={()=>{setRecordForm({id:"", acara:"", kategori:categories[0]||"", catatan:"", nama:"", tahun:activeYear}); setShowRecordForm(true);}} className="bg-amber-500 hover:bg-amber-600 transition text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">+ Rekod Baharu</button>}
+                                            {userRole !== "pelawat" && (
+                                                <div className="flex gap-2">
+                                                    <button onClick={handleAutoArchive} className="bg-indigo-600 hover:bg-indigo-700 transition text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">📥 Hantar Ke Arkib</button>
+                                                    <button onClick={()=>{setRecordForm({id:"", acara:"", kategori:categories[0]||"", catatan:"", nama:"", tahun:activeYear}); setShowRecordForm(true);}} className="bg-amber-500 hover:bg-amber-600 transition text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">+ Rekod Sekolah</button>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex-1 overflow-y-auto max-h-[300px] space-y-2 text-xs pr-1">
                                             {records.length === 0 ? <p className="text-slate-400 italic bg-slate-50 p-4 rounded-xl text-center">Tiada data rekod kejohanan dijumpai.</p> : 
@@ -2627,7 +2699,7 @@
                     {showRecordForm && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-amber-900 border-b pb-2">🏆 Tambah Rekod Arkib Baru</h3>
+                                <h3 className="font-black text-sm uppercase text-amber-900 border-b pb-2">🏆 Tambah Rekod Sekolah Lama</h3>
                                 <form onSubmit={handleRecordSubmit} className="space-y-3">
                                     <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Tahun</label><input required type="text" value={recordForm.tahun} onChange={e=>setRecordForm({...recordForm, tahun:e.target.value})} className="w-full border p-2.5 rounded-xl font-bold bg-slate-50" /></div>
                                     <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Acara Sukan</label><input required type="text" value={recordForm.acara} onChange={e=>setRecordForm({...recordForm, acara:e.target.value.toUpperCase()})} className="w-full border p-2.5 rounded-xl uppercase font-bold bg-slate-50" /></div>
