@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPARK Online - Transformasi Digital dalam Pengurusan Sukan</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
     
-    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -1507,6 +1505,7 @@
                                                 <button onClick={() => { setShowLockModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-red-50 text-xs font-semibold text-red-700">🔒 Kunci Sistem (Read-Only)</button>
                                                 <button onClick={() => { setShowDiagModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">ℹ️ Info Diag</button>
                                                 <button onClick={() => { setShowAdminManagerModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">👥 Pengurusan Admin Tambahan</button>
+                                                <button onClick={() => { setShowSignatoryModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">✍️ Tetapan Penandatangan (GB/PK/SU)</button>
                                                 <button onClick={() => { 
                                                     const initBonus = {};
                                                     Object.keys(housesMetadata).forEach(k => initBonus[k] = housesMetadata[k].bonusPoints || 0);
@@ -2235,6 +2234,7 @@
                         )}
                     </main>
 
+                    {/* Modals & Sidebars */}
                     {isBulkModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[10000] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in text-xs font-semibold">
                             <div className="bg-white rounded-2xl w-full max-w-xl p-6 space-y-4 shadow-2xl flex flex-col">
@@ -2599,25 +2599,66 @@
 
                     {showSignatoryModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-8 w-full max-w-2xl text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">✍️ Tetapan Penandatangan</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="bg-slate-50 p-3 rounded-xl border">
-                                        <label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama (Setiausaha Sukan)</label>
-                                        <input type="text" value={certSignatory1Name} onChange={e=>setCertSignatory1Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" />
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-xl text-xs font-semibold space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
+                                <div className="flex justify-between items-center border-b pb-2">
+                                    <h3 className="font-black text-sm uppercase text-slate-900">✍️ Tetapan Penandatangan Sijil & Laporan</h3>
+                                    <button onClick={() => setShowSignatoryModal(false)} className="text-slate-400 hover:text-slate-700 text-lg">✕</button>
+                                </div>
+                                <div className="overflow-y-auto space-y-4 pr-1 flex-1">
+                                    <div className="bg-slate-50 p-4 rounded-xl border space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-indigo-900">1. Setiausaha Sukan</h4>
+                                            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-600">
+                                                <input type="checkbox" checked={certShowSignatory1} onChange={e => setCertShowSignatory1(e.target.checked)} className="w-3.5 h-3.5 text-indigo-600 rounded" />
+                                                Papar pada Sijil
+                                            </label>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Nama Penuh</label><input type="text" value={certSignatory1Name} onChange={e=>setCertSignatory1Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Jawatan / Gelaran</label><input type="text" value={certSignatory1Title} onChange={e=>setCertSignatory1Title(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                        </div>
                                     </div>
-                                    <div className="bg-slate-50 p-3 rounded-xl border">
-                                        <label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama (PK Kokurikulum)</label>
-                                        <input type="text" value={certSignatory2Name} onChange={e=>setCertSignatory2Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" />
+                                    <div className="bg-slate-50 p-4 rounded-xl border space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-indigo-900">2. Penolong Kanan Kokurikulum</h4>
+                                            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-600">
+                                                <input type="checkbox" checked={certShowSignatory2} onChange={e => setCertShowSignatory2(e.target.checked)} className="w-3.5 h-3.5 text-indigo-600 rounded" />
+                                                Papar pada Sijil
+                                            </label>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Nama Penuh</label><input type="text" value={certSignatory2Name} onChange={e=>setCertSignatory2Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Jawatan / Gelaran</label><input type="text" value={certSignatory2Title} onChange={e=>setCertSignatory2Title(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-50 p-4 rounded-xl border space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="font-bold text-indigo-900">3. Guru Besar (Pengesahan Utama)</h4>
+                                            <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold text-slate-600">
+                                                <input type="checkbox" checked={certShowSignatory3} onChange={e => setCertShowSignatory3(e.target.checked)} className="w-3.5 h-3.5 text-indigo-600 rounded" />
+                                                Papar pada Sijil
+                                            </label>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Nama Penuh</label><input type="text" value={certSignatory3Name} onChange={e=>setCertSignatory3Name(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Jawatan / Gelaran</label><input type="text" value={certSignatory3Title} onChange={e=>setCertSignatory3Title(e.target.value)} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-3 pt-3">
-                                    <button onClick={()=>setShowSignatoryModal(false)} className="flex-1 py-3 bg-slate-200 rounded-xl">Batal</button>
+                                <div className="flex gap-3 pt-3 border-t shrink-0">
+                                    <button onClick={()=>setShowSignatoryModal(false)} className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl transition">Batal</button>
                                     <button onClick={()=>{
                                         localStorage.setItem('sps_sig1_name', certSignatory1Name);
+                                        localStorage.setItem('sps_sig1_title', certSignatory1Title);
+                                        localStorage.setItem('sps_sig1_show', certShowSignatory1);
                                         localStorage.setItem('sps_sig2_name', certSignatory2Name);
-                                        setShowSignatoryModal(false); showToastMessage("Disimpan.");
-                                    }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold">Simpan</button>
+                                        localStorage.setItem('sps_sig2_title', certSignatory2Title);
+                                        localStorage.setItem('sps_sig2_show', certShowSignatory2);
+                                        localStorage.setItem('sps_sig3_name', certSignatory3Name);
+                                        localStorage.setItem('sps_sig3_title', certSignatory3Title);
+                                        localStorage.setItem('sps_sig3_show', certShowSignatory3);
+                                        setShowSignatoryModal(false); showToastMessage("Tetapan penandatangan berjaya disimpan!");
+                                    }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition">Simpan Tetapan</button>
                                 </div>
                             </div>
                         </div>
@@ -2626,27 +2667,27 @@
                     {showPointsModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2 shrink-0">⚙️ Tetapan Poin Pingat</h3>
-                                <div className="overflow-y-auto pr-1 space-y-4 flex-1">
-                                    <div>
-                                        <h4 className="text-slate-500 uppercase text-[10px] mb-2 font-bold">Mata Kemenangan Pingat</h4>
+                                <div className="flex justify-between items-center border-b pb-2">
+                                    <h3 className="font-black text-sm uppercase text-slate-900">⚙️ Tetapan Kategori & Mata</h3>
+                                    <button onClick={() => setShowPointsModal(false)} className="text-slate-400 hover:text-slate-700 text-lg">✕</button>
+                                </div>
+                                <div className="overflow-y-auto space-y-4 pr-1 flex-1">
+                                    <div className="bg-slate-50 p-4 rounded-xl border space-y-3">
+                                        <h4 className="font-bold text-indigo-900">Pemarkahan Pingat</h4>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div><label className="block mb-1">Mata Emas</label><input type="number" value={pointsConfig.emas} onChange={e=>setPointsConfig({...pointsConfig,emas:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
-                                            <div><label className="block mb-1">Mata Perak</label><input type="number" value={pointsConfig.perak} onChange={e=>setPointsConfig({...pointsConfig,perak:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
-                                            <div><label className="block mb-1">Mata Gangsa</label><input type="number" value={pointsConfig.gangsa} onChange={e=>setPointsConfig({...pointsConfig,gangsa:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
-                                            <div><label className="block mb-1">Mata Keempat</label><input type="number" value={pointsConfig.keempat} onChange={e=>setPointsConfig({...pointsConfig,keempat:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Emas (Johan)</label><input type="number" value={pointsConfig.emas} onChange={e=>setPointsConfig({...pointsConfig, emas: parseInt(e.target.value)||0})} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Perak (Naib)</label><input type="number" value={pointsConfig.perak} onChange={e=>setPointsConfig({...pointsConfig, perak: parseInt(e.target.value)||0})} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Gangsa (Ketiga)</label><input type="number" value={pointsConfig.gangsa} onChange={e=>setPointsConfig({...pointsConfig, gangsa: parseInt(e.target.value)||0})} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Keempat</label><input type="number" value={pointsConfig.keempat} onChange={e=>setPointsConfig({...pointsConfig, keempat: parseInt(e.target.value)||0})} className="w-full border p-2 rounded-lg font-bold bg-white" /></div>
                                         </div>
                                     </div>
-                                    <div className="border-t pt-3">
-                                        <h4 className="text-slate-500 uppercase text-[10px] mb-2 font-bold">Mata Bonus Perbarisan / Acara Tambahan</h4>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {Object.keys(housesMetadata).map(house => (
-                                                <div key={house}>
-                                                    <label className="block mb-1 flex items-center gap-1.5">
-                                                        <span className={`w-2.5 h-2.5 rounded-full shadow-sm ${COLOR_PRESETS[housesMetadata[house]?.warnaLabel || "Merah"]?.warna}`}></span>
-                                                        Rumah {house}
-                                                    </label>
-                                                    <input type="number" value={tempBonusPoints[house] !== undefined ? tempBonusPoints[house] : (housesMetadata[house].bonusPoints || 0)} onChange={e => setTempBonusPoints({...tempBonusPoints, [house]: parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" />
+                                    <div className="bg-slate-50 p-4 rounded-xl border space-y-3">
+                                        <h4 className="font-bold text-indigo-900">Mata Bonus Perbarisan Rumah</h4>
+                                        <div className="space-y-2">
+                                            {Object.keys(housesMetadata).map(hName => (
+                                                <div key={hName} className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-lg border">
+                                                    <span className="font-bold uppercase">Rumah {hName}</span>
+                                                    <input type="number" value={tempBonusPoints[hName] !== undefined ? tempBonusPoints[hName] : (housesMetadata[hName].bonusPoints || 0)} onChange={e => setTempBonusPoints({...tempBonusPoints, [hName]: parseInt(e.target.value)||0})} className="w-20 border p-1.5 rounded-lg text-center font-bold bg-slate-50" />
                                                 </div>
                                             ))}
                                         </div>
@@ -2655,22 +2696,17 @@
                                 <div className="flex gap-3 pt-3 border-t shrink-0">
                                     <button onClick={()=>setShowPointsModal(false)} className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl transition">Batal</button>
                                     <button onClick={async ()=>{
+                                        const updatedHouses = {...housesMetadata};
+                                        Object.keys(tempBonusPoints).forEach(h => {
+                                            if(updatedHouses[h]) updatedHouses[h].bonusPoints = tempBonusPoints[h];
+                                        });
+                                        setHousesMetadata(updatedHouses);
                                         if(isCloudActive && db) {
                                             await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('points').set(pointsConfig);
-                                            const updatedHouses = { ...housesMetadata };
-                                            Object.keys(tempBonusPoints).forEach(k => {
-                                                if(updatedHouses[k]) updatedHouses[k].bonusPoints = tempBonusPoints[k];
-                                            });
                                             await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('houses').set(updatedHouses);
-                                        } else {
-                                            const updatedHouses = { ...housesMetadata };
-                                            Object.keys(tempBonusPoints).forEach(k => {
-                                                if(updatedHouses[k]) updatedHouses[k].bonusPoints = tempBonusPoints[k];
-                                            });
-                                            setHousesMetadata(updatedHouses);
                                         }
-                                        setShowPointsModal(false); showToastMessage("Mata pingat & bonus dikemaskini.");
-                                    }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition">Simpan</button>
+                                        setShowPointsModal(false); showToastMessage("Tetapan mata dan bonus disimpan!");
+                                    }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition">Simpan Tetapan</button>
                                 </div>
                             </div>
                         </div>
@@ -2678,100 +2714,69 @@
 
                     {showSchoolSetupModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl w-full max-w-2xl text-xs font-semibold p-6 space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-lg text-xs font-semibold space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
                                 <div className="flex justify-between items-center border-b pb-2">
-                                    <h3 className="font-black text-sm uppercase text-slate-900">🏫 Profil & Konfigurasi Sistem</h3>
+                                    <h3 className="font-black text-sm uppercase text-slate-900">🏫 Tetapan Rasmi Sekolah & Kejohanan</h3>
                                     <button onClick={() => setShowSchoolSetupModal(false)} className="text-slate-400 hover:text-slate-700 text-lg">✕</button>
                                 </div>
-
-                                <div className="flex gap-2 border-b overflow-x-auto">
-                                    <button onClick={() => setSchoolSetupTab("config")} className={`px-4 py-2 font-bold whitespace-nowrap transition ${schoolSetupTab === "config" ? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}>Profil Sekolah</button>
-                                    <button onClick={() => setSchoolSetupTab("code_gs")} className={`px-4 py-2 font-bold whitespace-nowrap transition ${schoolSetupTab === "code_gs" ? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}>Code.gs (Apps Script)</button>
-                                    <button onClick={() => setSchoolSetupTab("firebase")} className={`px-4 py-2 font-bold whitespace-nowrap transition ${schoolSetupTab === "firebase" ? "text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"}`}>Rules Firebase</button>
+                                <div className="flex gap-2 border-b pb-2">
+                                    <button onClick={() => setSchoolSetupTab("config")} className={`px-4 py-2 rounded-xl font-bold transition ${schoolSetupTab === 'config' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-100 text-slate-600'}`}>Konfigurasi Utama</button>
+                                    <button onClick={() => setSchoolSetupTab("gas")} className={`px-4 py-2 rounded-xl font-bold transition ${schoolSetupTab === 'gas' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-100 text-slate-600'}`}>Google Apps Script (GAS)</button>
                                 </div>
-
-                                <div className="overflow-y-auto flex-1 pr-1">
-                                    {schoolSetupTab === "config" && (
-                                        <form onSubmit={async (e) => {
-                                            e.preventDefault();
-                                            const form = e.target;
-                                            localStorage.setItem('sps_school_name', form.schoolName.value);
-                                            localStorage.setItem('sps_school_subtitle', form.schoolSubtitle.value);
-                                            localStorage.setItem('sps_school_logo', form.logoUrl.value);
-                                            localStorage.setItem('sps_active_year', form.activeYear.value);
-                                            if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('config').set({activeYear: form.activeYear.value}, {merge: true});
-                                            setShowSchoolSetupModal(false);
-                                            window.location.reload();
-                                        }} className="space-y-3">
-                                            <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Nama Sekolah</label><input required name="schoolName" defaultValue={activeSchoolName} className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2.5 rounded-xl uppercase font-bold outline-none transition" /></div>
-                                            <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Subtajuk / Keterangan Kejohanan</label><input required name="schoolSubtitle" defaultValue={activeSchoolSubtitle} className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2.5 rounded-xl font-bold outline-none transition" /></div>
-                                            <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Pautan Imej Lencana / Logo Sekolah (URL)</label><input required name="logoUrl" defaultValue={logoUrl} className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2.5 rounded-xl outline-none transition" /></div>
-                                            <div><label className="block mb-1 text-slate-500 uppercase text-[10px]">Tahun Aktif Kejohanan</label><input required name="activeYear" defaultValue={activeYear} type="number" className="w-full border-2 border-slate-200 focus:border-indigo-500 p-2.5 rounded-xl font-bold outline-none transition" /></div>
-                                            <div className="flex gap-2 pt-3">
-                                                <button type="button" onClick={()=>setShowSchoolSetupModal(false)} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 font-bold rounded-xl transition">Batal</button>
-                                                <button type="submit" className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-md">Simpan & Muat Semula</button>
-                                            </div>
-                                        </form>
-                                    )}
-
-                                    {schoolSetupTab === "code_gs" && (
-                                        <div className="space-y-3 animate-fade-in">
-                                            <p className="text-slate-500 text-[11px] leading-relaxed">
-                                                Salin kod skrip di bawah dan tampalkan ke dalam ruangan <b>Google Apps Script</b> (melalui menu Extensions &gt; Apps Script di dalam Google Sheets anda) untuk membolehkan penyimpanan Laporan Kokum secara automatik (AppSheet Integration).
-                                            </p>
-                                            <div className="relative">
-                                                <textarea readOnly className="w-full h-64 p-4 bg-slate-900 text-emerald-400 font-mono text-[11px] rounded-xl border-none outline-none leading-relaxed shadow-inner resize-none" value={`function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    
-    if (data.action === 'saveKokumManual') {
-       sheet.appendRow([new Date(), data.year, data.content]);
-       return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": err.message})).setMimeType(ContentService.MimeType.JSON);
-  }
-}`}></textarea>
-                                                <button onClick={() => {
-                                                    const code = `function doPost(e) {\n  try {\n    var data = JSON.parse(e.postData.contents);\n    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();\n    \n    if (data.action === 'saveKokumManual') {\n       sheet.appendRow([new Date(), data.year, data.content]);\n       return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);\n    }\n    \n  } catch(err) {\n    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": err.message})).setMimeType(ContentService.MimeType.JSON);\n  }\n}`;
-                                                    const tempTextArea = document.createElement("textarea");
-                                                    tempTextArea.value = code; document.body.appendChild(tempTextArea);
-                                                    tempTextArea.select(); document.execCommand("copy"); document.body.removeChild(tempTextArea);
-                                                    showToastMessage("Kod Code.gs disalin!");
-                                                }} className="absolute top-3 right-3 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-[10px] font-bold backdrop-blur transition">📋 Salin Kod</button>
-                                            </div>
+                                <div className="overflow-y-auto space-y-4 pr-1 flex-1">
+                                    {schoolSetupTab === 'config' ? (
+                                        <div className="space-y-3">
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Nama Penuh Sekolah</label><input type="text" id="setup-school-name" defaultValue={activeSchoolName} className="w-full border p-2.5 rounded-xl font-bold bg-slate-50" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Subtitis / Nama Kejohanan</label><input type="text" id="setup-school-subtitle" defaultValue={activeSchoolSubtitle} className="w-full border p-2.5 rounded-xl font-bold bg-slate-50" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">URL Logo Sekolah (Pautan Imej / Pautan Google Drive Direct)</label><input type="text" id="setup-school-logo" defaultValue={logoUrl} className="w-full border p-2.5 rounded-xl font-bold bg-slate-50" /></div>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Tahun Semasa Kejohanan</label><input type="text" id="setup-school-year" defaultValue={activeYear} className="w-full border p-2.5 rounded-xl font-bold bg-slate-50" /></div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <p className="text-[11px] text-slate-500 leading-relaxed">Masukkan URL Web App Google Apps Script anda untuk menyelaraskan data sandaran dan pelaporan Google Sheets.</p>
+                                            <div><label className="block mb-1 text-[10px] text-slate-500 uppercase">Google Apps Script Web App URL</label><input type="text" id="setup-gas-url" defaultValue={gasUrl} placeholder="https://script.google.com/macros/s/.../exec" className="w-full border p-2.5 rounded-xl font-mono text-[11px] bg-slate-50" /></div>
                                         </div>
                                     )}
+                                </div>
+                                <div className="flex gap-3 pt-3 border-t shrink-0">
+                                    <button onClick={()=>setShowSchoolSetupModal(false)} className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl transition">Batal</button>
+                                    <button onClick={()=>{
+                                        if(schoolSetupTab === 'config') {
+                                            const sName = document.getElementById('setup-school-name').value;
+                                            const sSub = document.getElementById('setup-school-subtitle').value;
+                                            const sLogo = document.getElementById('setup-school-logo').value;
+                                            const sYear = document.getElementById('setup-school-year').value;
+                                            localStorage.setItem('sps_school_name', sName);
+                                            localStorage.setItem('sps_school_subtitle', sSub);
+                                            localStorage.setItem('sps_school_logo', sLogo);
+                                            localStorage.setItem('sps_active_year', sYear);
+                                            setActiveYear(sYear);
+                                        } else {
+                                            const gUrl = document.getElementById('setup-gas-url').value.trim();
+                                            localStorage.setItem('sps_custom_gas_url', gUrl);
+                                            setGasUrl(gUrl);
+                                        }
+                                        setShowSchoolSetupModal(false);
+                                        showToastMessage("Tetapan sekolah disimpan!");
+                                    }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition">Simpan Perubahan</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-                                    {schoolSetupTab === "firebase" && (
-                                        <div className="space-y-3 animate-fade-in">
-                                            <p className="text-slate-500 text-[11px] leading-relaxed">
-                                                Salin kod keselamatan di bawah dan tampalkan ke dalam tab <b>Rules</b> di halaman Firebase Firestore anda untuk membenarkan akses baca/tulis aplikasi ke atas pangkalan data awam SPARK Online.
-                                            </p>
-                                            <div className="relative">
-                                                <textarea readOnly className="w-full h-56 p-4 bg-slate-900 text-blue-400 font-mono text-[11px] rounded-xl border-none outline-none leading-relaxed shadow-inner resize-none" value={`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Peraturan lalai untuk projek SPARK Online
-    match /artifacts/{appId}/public/data/{document=**} {
-      allow read, write: if true; 
-    }
-    
-  }
-}`}></textarea>
-                                                <button onClick={() => {
-                                                    const code = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    \n    // Peraturan lalai untuk projek SPARK Online\n    match /artifacts/{appId}/public/data/{document=**} {\n      allow read, write: if true; \n    }\n    \n  }\n}`;
-                                                    const tempTextArea = document.createElement("textarea");
-                                                    tempTextArea.value = code; document.body.appendChild(tempTextArea);
-                                                    tempTextArea.select(); document.execCommand("copy"); document.body.removeChild(tempTextArea);
-                                                    showToastMessage("Kod Rules Firebase disalin!");
-                                                }} className="absolute top-3 right-3 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-[10px] font-bold backdrop-blur transition">📋 Salin Kod</button>
-                                            </div>
-                                        </div>
-                                    )}
+                    {showDiagModal && (
+                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl">
+                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">ℹ️ Maklumat Diagnostik Sistem</h3>
+                                <div className="space-y-2 bg-slate-50 p-4 rounded-xl border">
+                                    <p><strong>Status Cloud (Firebase):</strong> <span className={isCloudActive ? "text-emerald-600 font-bold" : "text-amber-600 font-bold"}>{isCloudActive ? "Aktif (Online)" : "Mod Lokal"}</span></p>
+                                    <p><strong>Project ID:</strong> <span className="font-mono">{appId}</span></p>
+                                    <p><strong>Jumlah Atlet Berdaftar:</strong> {athletes.length}</p>
+                                    <p><strong>Jumlah Acara:</strong> {events.length}</p>
+                                    <p><strong>Jumlah Keputusan Dikunci:</strong> {results.length}</p>
+                                </div>
+                                <div className="flex justify-end pt-2">
+                                    <button onClick={() => setShowDiagModal(false)} className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow">Tutup</button>
                                 </div>
                             </div>
                         </div>
@@ -2779,106 +2784,100 @@ service cloud.firestore {
 
                     {showAdminManagerModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl flex flex-col max-h-[80vh]">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">👥 Pengurusan Emel Admin</h3>
-                                <div className="flex gap-2">
-                                    <input type="email" value={newAdminEmail} onChange={e=>setNewAdminEmail(e.target.value)} placeholder="Emel Admin Baru..." className="flex-1 border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-indigo-500 font-bold" />
-                                    <button onClick={async () => {
-                                        if(!newAdminEmail) return;
-                                        const updated = [...adminList, newAdminEmail.toLowerCase()];
-                                        if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({list: updated});
-                                        setNewAdminEmail(""); showToastMessage("Admin ditambah");
-                                    }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm">Tambah</button>
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
+                                <div className="flex justify-between items-center border-b pb-2">
+                                    <h3 className="font-black text-sm uppercase text-slate-900">👥 Pengurusan Admin Tambahan</h3>
+                                    <button onClick={() => setShowAdminManagerModal(false)} className="text-slate-400 hover:text-slate-700 text-lg">✕</button>
                                 </div>
-                                <div className="flex-1 overflow-y-auto space-y-2 border-t pt-2">
-                                    {adminList.map(email => (
-                                        <div key={email} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border shadow-sm">
-                                            <span className="font-bold text-slate-700">{email}</span>
-                                            <button onClick={async () => {
-                                                const updated = adminList.filter(e => e !== email);
-                                                if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({list: updated});
-                                                else setAdminList(updated);
-                                                showToastMessage("Admin dibuang");
-                                            }} className="text-red-500 hover:scale-110 font-bold transition">✕</button>
+                                <div className="space-y-3">
+                                    <p className="text-[11px] text-slate-500 leading-relaxed">Tambah emel DELIMa guru/urusetia yang dibenarkan mendapat akses penuh Pentadbir (Admin).</p>
+                                    <div className="flex gap-2">
+                                        <input type="email" value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} placeholder="emel@moe-dl.edu.my" className="flex-1 border p-2.5 rounded-xl bg-slate-50" />
+                                        <button onClick={async () => {
+                                            if(!newAdminEmail || !newAdminEmail.trim()) return;
+                                            const updated = [...adminList, newAdminEmail.trim().toLowerCase()];
+                                            setAdminList(updated);
+                                            setNewAdminEmail("");
+                                            if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({ list: updated });
+                                            showToastMessage("Emel admin ditambah!");
+                                        }} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold">Tambah</button>
+                                    </div>
+                                    <div className="border rounded-xl p-3 bg-slate-50 space-y-2 max-h-48 overflow-y-auto">
+                                        <p className="font-bold text-slate-400 uppercase text-[10px]">Senarai Emel Admin Sah:</p>
+                                        <div className="space-y-1">
+                                            <div className="bg-white p-2 rounded border font-mono flex justify-between items-center text-[11px]">
+                                                <span>sekolah-7608@moe-dl.edu.my (Utama)</span>
+                                            </div>
+                                            {adminList.map((em, idx) => (
+                                                <div key={idx} className="bg-white p-2 rounded border font-mono flex justify-between items-center text-[11px]">
+                                                    <span>{em}</span>
+                                                    <button onClick={async () => {
+                                                        const updated = adminList.filter((_, i) => i !== idx);
+                                                        setAdminList(updated);
+                                                        if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({ list: updated });
+                                                        showToastMessage("Emel dipadam daripada senarai admin.");
+                                                    }} className="text-red-500 font-bold ml-2">✕</button>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                    {adminList.length === 0 && <p className="text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl">Tiada admin tambahan direkodkan.</p>}
+                                    </div>
                                 </div>
-                                <button onClick={() => setShowAdminManagerModal(false)} className="w-full py-2.5 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold mt-2 transition">Tutup</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {showDiagModal && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 max-w-md w-full text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="text-sm font-black text-slate-900 uppercase border-b pb-2">ℹ️ Diagnostik & Status Sistem</h3>
-                                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border">
-                                    <p className="flex justify-between border-b pb-1">Status Awan (Firebase): <span className={isCloudActive ? "text-emerald-600 font-bold" : "text-red-600 font-bold"}>{isCloudActive ? "Disambungkan 🟢" : "Tidak Aktif 🔴"}</span></p>
-                                    <p className="flex justify-between border-b pb-1">Kunci Pangkalan Data: <span className="font-mono text-indigo-600">{appId}</span></p>
-                                    <p className="flex justify-between border-b pb-1">Peranan Log Masuk: <span className="font-bold uppercase text-indigo-600">{userRole}</span></p>
-                                    <p className="flex justify-between border-b pb-1">Jumlah Data Atlet: <span className="font-bold">{athletes.length} Murid</span></p>
-                                    <p className="flex justify-between border-b pb-1">Jumlah Rekod Acara: <span className="font-bold">{events.length} Acara</span></p>
-                                    <p className="flex justify-between border-b pb-1">Jumlah Keputusan Dicatat: <span className="font-bold">{results.length} Log</span></p>
+                                <div className="flex justify-end pt-2 border-t shrink-0">
+                                    <button onClick={() => setShowAdminManagerModal(false)} className="px-5 py-2.5 bg-slate-200 rounded-xl font-bold">Tutup</button>
                                 </div>
-                                <button onClick={() => setShowDiagModal(false)} className="w-full px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition shadow-md">Tutup Tetingkap</button>
                             </div>
                         </div>
                     )}
 
                     {confirmModal.show && (
-                        <div className="fixed inset-0 bg-slate-900/60 z-[10001] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-xs space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm text-red-600 uppercase">{confirmModal.title}</h3>
-                                <p className="text-slate-600 font-semibold">{confirmModal.message}</p>
-                                <div className="flex gap-2 pt-2">
-                                    <button onClick={() => setConfirmModal({ show: false, title: "", message: "", onConfirm: null })} className="flex-1 px-4 py-2 bg-slate-200 rounded-xl font-bold">Batal</button>
-                                    <button onClick={confirmModal.onConfirm} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl font-bold shadow-md">Ya</button>
+                        <div className="fixed inset-0 bg-slate-900/60 z-[10001] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in text-xs font-semibold">
+                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+                                <h3 className="font-black text-sm uppercase text-red-600 border-b pb-2">{confirmModal.title}</h3>
+                                <p className="text-slate-600 leading-relaxed">{confirmModal.message}</p>
+                                <div className="flex gap-3 pt-2">
+                                    <button onClick={() => setConfirmModal({ show: false, title: "", message: "", onConfirm: null })} className="flex-1 bg-slate-200 hover:bg-slate-300 py-2.5 rounded-xl font-bold transition">Batal</button>
+                                    <button onClick={() => { if(confirmModal.onConfirm) confirmModal.onConfirm(); }} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold shadow-md transition">Teruskan</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {isPreviewModalOpen && (
-                        <div className="fixed inset-0 bg-slate-900/80 z-[10000] flex flex-col p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-slate-100 rounded-2xl shadow-2xl flex flex-col flex-1 max-w-5xl w-full mx-auto overflow-hidden border border-slate-300">
-                                <div className="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md z-10">
-                                    <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">🖨️ Pratinjau Dokumen Cetak</h3>
-                                    <button onClick={()=>setIsPreviewModalOpen(false)} className="bg-slate-800 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold transition">✕</button>
+                        <div className="fixed inset-0 bg-slate-900/80 z-[10000] flex flex-col backdrop-blur-sm animate-fade-in">
+                            <div className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-lg">
+                                <div className="flex items-center gap-3">
+                                    <h3 className="font-black text-sm tracking-wide">🖨️ Cetak / Pratonton Rasmi Dokumen</h3>
+                                    {currentPrintMode === 'kokum' && (
+                                        <button onClick={handleSaveKokumManualToCloud} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow transition">💾 Simpan Laporan Manual</button>
+                                    )}
                                 </div>
-                                <div className="flex-1 p-0 sm:p-4 overflow-hidden bg-slate-300/50">
-                                    <iframe id="preview-frame" srcDoc={previewContent} className="w-full h-full border-none sm:rounded-xl shadow-lg" />
+                                <div className="flex items-center gap-3">
+                                    <button onClick={() => {
+                                        const f = document.getElementById('preview-frame');
+                                        if(f && f.contentWindow) { f.contentWindow.print(); }
+                                    }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow transition">Cetak Sekarang</button>
+                                    <button onClick={() => setIsPreviewModalOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition">Tutup</button>
                                 </div>
-                                <div className="p-4 bg-white flex flex-col sm:flex-row justify-between items-center gap-3 text-xs font-bold border-t z-10">
-                                    <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-                                        {currentPrintMode === 'sijil' && printTargetData && (
-                                            <React.Fragment>
-                                                <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("Tahniah! Sijil pencapaian sukan anda telah dijana: " + window.location.origin + window.location.pathname + "?cert=" + printTargetData.id)}`, '_blank')} className="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">💬 WhatsApp</button>
-                                                <button onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin + window.location.pathname + "?cert=" + printTargetData.id)}&text=${encodeURIComponent("Sijil Pencapaian Sukan")}`, '_blank')} className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 whitespace-nowrap">✈️ Telegram</button>
-                                            </React.Fragment>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
-                                        <button onClick={()=>setIsPreviewModalOpen(false)} className="bg-slate-200 hover:bg-slate-300 px-6 py-2.5 rounded-xl transition">Tutup</button>
-                                        <button onClick={()=>{const f=document.getElementById('preview-frame');if(f){f.contentWindow.focus();f.contentWindow.print();}}} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl shadow-md transition">🖨️ Cetak</button>
-                                    </div>
-                                </div>
+                            </div>
+                            <div className="flex-1 bg-slate-800 p-4 flex justify-center overflow-auto">
+                                <iframe id="preview-frame" srcDoc={previewContent} className="w-full max-w-5xl h-full bg-white rounded-xl shadow-2xl border-0" title="Pratonton Cetakan"></iframe>
                             </div>
                         </div>
                     )}
 
                     {toast.show && (
-                        <div className="fixed bottom-6 right-6 z-[10001] bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-3 animate-slide-up">
-                            {toast.type === "error" ? "⚠️" : "✅"}
-                            <span>{toast.message}</span>
+                        <div className="fixed bottom-5 right-5 z-[20000] animate-slide-up">
+                            <div className={`p-4 rounded-2xl shadow-2xl text-xs font-bold text-white flex items-center gap-3 ${toast.type === 'error' ? 'bg-red-600' : 'bg-slate-900'}`}>
+                                <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>
+                                <span>{toast.message}</span>
+                            </div>
                         </div>
                     )}
                 </div>
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>
