@@ -14,10 +14,16 @@
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* Kemasan UI/UX Global: Scrollbar & Jadual Pintar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { white-space: nowrap; padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        
         @media print { body { background: white; margin: 0; padding: 0; } }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -467,59 +473,9 @@
             }, [events]);
 
             const calculateBest = (gender, cat) => {
-            if (!cat) return [];
-            const catAthletes = athletes.filter(a => a.jantina === gender && (a.kategori === cat || categoriesMatch(a.kategori, cat)));
-            const stats = catAthletes.map(ath => {
-                let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
-                let senaraiAcara = [];
-                results.forEach(r => {
-                    const ev = events.find(e => e.id === r.eventId);
-                    if (!ev) return;
-                    
-                    let isWinner = false;
-                    if (r.athleteId === ath.id) {
-                        isWinner = true;
-                    } else if (ev.format === "Berkumpulan" && r.athleteId && r.athleteId.startsWith("TEAM_")) {
-                        const parts = r.athleteId.split('_');
-                        if (ath.rumah === parts[1] && ath.acaraIds && ath.acaraIds.includes(ev.id)) {
-                            const rData = (ath.relayData && ath.relayData[ev.id]) || { pasukan: "A", pelari: "1" };
-                            if (rData.pasukan === parts[2]) {
-                                isWinner = true;
-                            }
-                        }
-                    }
-
-                    if (isWinner) {
-                        let pingat = "";
-                        if(r.kedudukan==="1"){g++; pts+=pointsConfig.emas; if(ev.jenis==="Balapan") bg++; pingat = "Emas";}
-                            else if(r.kedudukan==="2"){s++; pts+=pointsConfig.perak; if(ev.jenis==="Balapan") bs++; pingat = "Perak";}
-                            else if(r.kedudukan==="3"){b++; pts+=pointsConfig.gangsa; if(ev.jenis==="Balapan") bb++; pingat = "Gangsa";}
-                            else if(r.kedudukan==="4"){k++; pts+=pointsConfig.keempat; pingat = "Ke-4";}
-
-                            if(pingat) senaraiAcara.push({ namaAcara: ev.nama, kategori: ev.kategori, pingat: pingat, kedudukan: r.kedudukan });
-                        }
-                    });
-                    return { ...ath, g, s, b, k, pts, bg, bs, bb, senaraiAcara };
-                }).filter(a => (a.g>0||a.s>0||a.b>0||a.k>0||a.pts>0));
-                
-                stats.sort((x,y) => {
-                    if (y.g !== x.g) return y.g - x.g;
-                    if (y.s !== x.s) return y.s - x.s;
-                    if (y.b !== x.b) return y.b - x.b;
-                    if (y.k !== x.k) return y.k - x.k;
-                    if (y.pts !== x.pts) return y.pts - x.pts;
-                    if (y.bg !== x.bg) return y.bg - x.bg;
-                    if (y.bs !== x.bs) return y.bs - x.bs;
-                    if (y.bb !== x.bb) return y.bb - x.bb;
-                    return 0;
-                });
-                if (stats.length === 0) return [];
-                const top = stats[0];
-                return stats.filter(a => a.g===top.g && a.s===top.s && a.b===top.b && a.k===top.k && a.pts===top.pts && a.bg===top.bg && a.bs===top.bs && a.bb===top.bb);
-            };
-
-            const calculateOverallBest = (gender) => {
-                const catAthletes = athletes.filter(a => a.jantina === gender);
+                if (!cat) return [];
+                const isOverall = (cat === "Keseluruhan");
+                const catAthletes = athletes.filter(a => a.jantina === gender && (isOverall || a.kategori === cat || categoriesMatch(a.kategori, cat)));
                 const stats = catAthletes.map(ath => {
                     let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
                     let senaraiAcara = [];
@@ -829,8 +785,8 @@
                     const totalPerempuan = athletes.filter(a => a.jantina === "Perempuan").length;
                     const totalAthletes = athletes.length;
 
-                    const ovLelakiArr = calculateOverallBest("Lelaki");
-                    const ovPerempuanArr = calculateOverallBest("Perempuan");
+                    const ovLelakiArr = calculateBest("Lelaki", "Keseluruhan");
+                    const ovPerempuanArr = calculateBest("Perempuan", "Keseluruhan");
 
                     const formatOv = (arr) => {
                         if (!arr || arr.length === 0) return 'Belum Ditentukan';
@@ -2096,7 +2052,7 @@
                                                             <option value="Keseluruhan">Keseluruhan</option>
                                                             {categories.filter(c => !c.toUpperCase().startsWith('P')).map(c => <option key={c} value={c}>{c}</option>)}
                                                         </select>
-                                                        <button onClick={() => setBestMaleResults(bestAthleteMaleCat === "Keseluruhan" ? calculateOverallBest("Lelaki") : calculateBest("Lelaki", bestAthleteMaleCat))} className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
+                                                        <button onClick={() => setBestMaleResults(calculateBest("Lelaki", bestAthleteMaleCat))} className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
                                                     </div>
                                                 </div>
                                                 {bestMaleResults && bestMaleResults.length > 0 ? (
@@ -2137,7 +2093,7 @@
                                                             <option value="Keseluruhan">Keseluruhan</option>
                                                             {categories.filter(c => !c.toUpperCase().startsWith('L')).map(c => <option key={c} value={c}>{c}</option>)}
                                                         </select>
-                                                        <button onClick={() => setBestFemaleResults(bestAthleteFemaleCat === "Keseluruhan" ? calculateOverallBest("Perempuan") : calculateBest("Perempuan", bestAthleteFemaleCat))} className="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
+                                                        <button onClick={() => setBestFemaleResults(calculateBest("Perempuan", bestAthleteFemaleCat))} className="bg-pink-600 hover:bg-pink-700 text-white px-2 py-1 rounded text-[10px] font-bold transition shadow-sm">Cari</button>
                                                     </div>
                                                 </div>
                                                 {bestFemaleResults && bestFemaleResults.length > 0 ? (
