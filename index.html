@@ -280,9 +280,6 @@
                 if (userRole === "pelawat" && ["rumah_sukan", "acara", "atlit", "pasca_sukan", "ramalan"].includes(activeTab)) {
                     setActiveTab("dashboard");
                 }
-                if ((userRole === "guru" || userRole === "urusetia") && activeTab === "ramalan") {
-                    setActiveTab("dashboard");
-                }
             }, [userRole, activeTab]);
 
             useEffect(() => {
@@ -662,7 +659,7 @@
             };
 
             const predictions = useMemo(() => {
-                if(activeTab === "ramalan" && userRole === "admin") return generatePredictions();
+                if(activeTab === "ramalan" && ["admin", "guru", "urusetia"].includes(userRole)) return generatePredictions();
                 return null;
             }, [activeTab, results, athletes, events, userRole, activeYear, housesMetadata, pointsConfig]);
 
@@ -1472,7 +1469,7 @@
                 { id: "acara", label: "Pengurusan Acara", reqRoles: ["admin", "guru", "urusetia"] },
                 { id: "atlit", label: "Pengurusan Atlet", reqRoles: ["admin", "guru", "urusetia"] },
                 { id: "keputusan", label: "Keputusan Acara", reqRoles: ["admin", "guru", "urusetia", "pelawat"] },
-                { id: "ramalan", label: "Ramalan Hadapan", reqRoles: ["admin"] },
+                { id: "ramalan", label: "Ramalan Hadapan", reqRoles: ["admin", "guru", "urusetia"] },
                 { id: "pasca_sukan", label: "Pasca Sukan", reqRoles: ["admin", "guru", "urusetia"] }
             ].filter(tab => tab.reqRoles.includes(userRole));
 
@@ -2170,49 +2167,60 @@
                                             {eventsWithCode.map(ev => <option key={ev.id} value={ev.id}>[{ev.kodAcara}] {ev.nama}</option>)}
                                         </select>
                                     </div>
-                                    <div className="max-h-72 overflow-y-auto space-y-2 pr-2">
-                                        {athletes.filter(a => {
-                                            if (!a.nama || a.nama.trim() === "") return false;
-                                            const mSearch = !certSearchQuery || (a.nama||"").toLowerCase().includes(certSearchQuery.toLowerCase());
-                                            const mHouse = certHouseFilter === "Semua" || a.rumah === certHouseFilter;
-                                            let mEvent = true;
-                                            if (certEventFilter !== "Semua") {
-                                                const reg = a.acaraIds && a.acaraIds.includes(certEventFilter);
-                                                const won = (results || []).some(r => {
-                                                    if (r.eventId !== certEventFilter) return false;
-                                                    if (r.athleteId === a.id) return true;
-                                                    if (r.athleteId && r.athleteId.startsWith("TEAM_")) {
-                                                        const parts = r.athleteId.split('_');
-                                                        if (a.rumah === parts[1] && a.acaraIds && a.acaraIds.includes(certEventFilter)) {
-                                                            const rData = (a.relayData && a.relayData[certEventFilter]) || { pasukan: "A", pelari: "1" };
-                                                            if (rData.pasukan === parts[2]) return true;
-                                                        }
-                                                    }
-                                                    return false;
-                                                });
-                                                mEvent = reg || won;
-                                            }
-                                            return mSearch && mHouse && mEvent;
-                                        }).sort((a,b) => (a.rumah || "").localeCompare(b.rumah || "") || (a.kelas || "").localeCompare(b.kelas || "") || (a.nama || "").localeCompare(b.nama || "")).map(ath => (
-                                            <div key={ath.id} className="bg-slate-50 border p-3 rounded-xl flex justify-between items-center text-xs shadow-sm hover:shadow transition">
-                                                <div><p className="font-extrabold uppercase text-sm">{ath.nama}</p><p className="text-[10px] text-slate-500 font-semibold mt-1">Rumah {ath.rumah} | Kelas {ath.kelas}</p></div>
-                                                <button onClick={() => executeBypassPrint('sijil', ath)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition whitespace-nowrap">Cetak Sijil</button>
-                                            </div>
-                                        ))}
+                                    <div className="overflow-x-auto border rounded-xl">
+                                        <table className="w-full text-left text-xs">
+                                            <thead className="bg-slate-50 border-b">
+                                                <tr>
+                                                    <th className="p-3 text-slate-500 uppercase">Nama Peserta</th>
+                                                    <th className="p-3 text-slate-500 uppercase">Rumah / Kelas</th>
+                                                    <th className="p-3 text-slate-500 uppercase">Status Pencapaian</th>
+                                                    <th className="p-3 text-slate-500 uppercase text-center">Tindakan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {athletes.filter(a => {
+                                                    if (certHouseFilter !== "Semua" && a.rumah !== certHouseFilter) return false;
+                                                    if (certSearchQuery && !(a.nama||"").toLowerCase().includes(certSearchQuery.toLowerCase())) return false;
+                                                    if (certEventFilter !== "Semua" && (!a.acaraIds || !a.acaraIds.includes(certEventFilter))) return false;
+                                                    return true;
+                                                }).map(ath => {
+                                                    const athRes = results.filter(r => r.athleteId === ath.id || (r.athleteId.startsWith("TEAM_") && r.athleteId.includes(`_${ath.rumah}_`) && ath.acaraIds?.includes(r.eventId)));
+                                                    const hasMedal = athRes.some(r => ["1","2","3"].includes(r.kedudukan));
+                                                    
+                                                    return (
+                                                    <tr key={ath.id} className="border-b hover:bg-slate-50 transition">
+                                                        <td className="p-3 font-bold uppercase text-slate-900">{ath.nama}</td>
+                                                        <td className="p-3 font-semibold text-slate-600">Rumah {ath.rumah} | {ath.kelas}</td>
+                                                        <td className="p-3">{hasMedal ? <span className="bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded-md font-bold text-[10px] shadow-sm">Pemenang Pingat</span> : <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md font-bold text-[10px] shadow-sm">Penyertaan Sahaja</span>}</td>
+                                                        <td className="p-3 text-center">
+                                                            <button onClick={() => executeBypassPrint('sijil', ath)} className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-4 py-1.5 rounded-lg font-bold transition border border-indigo-100 shadow-sm whitespace-nowrap">Cetak Sijil</button>
+                                                        </td>
+                                                    </tr>
+                                                )})}
+                                                {athletes.filter(a => {
+                                                    if (certHouseFilter !== "Semua" && a.rumah !== certHouseFilter) return false;
+                                                    if (certSearchQuery && !(a.nama||"").toLowerCase().includes(certSearchQuery.toLowerCase())) return false;
+                                                    if (certEventFilter !== "Semua" && (!a.acaraIds || !a.acaraIds.includes(certEventFilter))) return false;
+                                                    return true;
+                                                }).length === 0 && (
+                                                    <tr><td colSpan="4" className="text-center py-6 text-slate-400 italic">Tiada rekod murid/sijil dijumpai berdasarkan tapisan ini.</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {activeTab === "ramalan" && userRole === "admin" && predictions && (
+                        {activeTab === "ramalan" && ["admin", "guru", "urusetia"].includes(userRole) && predictions && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="bg-gradient-to-r from-purple-800 to-indigo-900 text-white p-6 border rounded-2xl shadow-lg relative overflow-hidden">
                                     <div className="absolute -right-10 -top-10 text-9xl opacity-10">🔮</div>
                                     <h3 className="text-xl font-black mb-1 relative z-10">Ramalan Tahun Hadapan ({predictions.year})</h3>
-                                    <p className="text-xs text-purple-200 relative z-10 max-w-2xl">Modul ini menjana ramalan pencapaian rumah sukan secara auto-penggantian.</p>
+                                    <p className="text-xs text-purple-200 relative z-10 max-w-2xl">Modul ini menjana ramalan pencapaian rumah sukan dan murid secara auto-penggantian (menggugurkan murid Tahun 6 / 12 Tahun).</p>
                                 </div>
 
-                                <h3 className="font-black text-slate-800 border-b-2 border-slate-200 pb-2">Ramalan Pungutan Pingat Keseluruhan</h3>
+                                <h3 className="font-black text-slate-800 border-b-2 border-slate-200 pb-2">Ramalan Pungutan Pingat Keseluruhan (Rumah Sukan)</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {predictions.houses.map((h, i) => (
                                         <div key={h.nama} className={`bg-white border p-4 rounded-2xl relative overflow-hidden transition-all duration-300 ${h.glow}`}>
@@ -2229,6 +2237,43 @@
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+
+                                <h3 className="font-black text-slate-800 border-b-2 border-slate-200 pb-2 mt-8">Analisis Pemenang Mengikut Acara (Kenaikan Kedudukan)</h3>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {predictions.events.map(pe => (
+                                        <div key={pe.event.id} className="bg-white border rounded-2xl p-4 shadow-sm hover:shadow-md transition">
+                                            <div className="mb-3 border-b pb-2 flex justify-between items-center">
+                                                <div>
+                                                    <h4 className="font-extrabold uppercase text-sm text-slate-900 leading-tight">[{pe.event.kodAcara}] {pe.event.nama}</h4>
+                                                    <p className="text-[11px] text-indigo-600 font-bold mt-0.5">{pe.event.kategori} • {pe.event.jenis}</p>
+                                                </div>
+                                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${pe.event.format === 'Berkumpulan' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>{pe.event.format}</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {pe.winners.map((w, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100 hover:border-indigo-200 transition">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className={`w-7 h-7 flex items-center justify-center rounded-full text-white font-black shadow-sm ${w.predictedRank === '1' ? 'bg-yellow-500' : w.predictedRank === '2' ? 'bg-slate-400' : w.predictedRank === '3' ? 'bg-orange-500' : 'bg-blue-600'}`}>
+                                                                {w.predictedRank}
+                                                            </span>
+                                                            <div>
+                                                                <p className="font-bold text-slate-800 uppercase">{w.name}</p>
+                                                                <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Naik dari kedudukan asal: #{w.originalRank}</p>
+                                                            </div>
+                                                        </div>
+                                                        <span className="font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg shadow-sm border text-[10px] uppercase">Rumah {w.house}</span>
+                                                    </div>
+                                                ))}
+                                                {pe.winners.length === 0 && <p className="text-[11px] text-slate-400 italic text-center py-2">Tiada data murid bawah Tahun 6 direkodkan.</p>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {predictions.events.length === 0 && (
+                                        <div className="col-span-1 lg:col-span-2 text-center py-8 bg-slate-50 rounded-2xl border border-dashed">
+                                            <p className="text-slate-500 font-bold">Belum ada acara yang boleh dianalisis secara tepat.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
