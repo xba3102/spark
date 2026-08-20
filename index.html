@@ -519,10 +519,10 @@
             };
 
             const calculateOverallBest = (gender) => {
-            const catAthletes = athletes.filter(a => a.jantina === gender);
-            const stats = catAthletes.map(ath => {
-                let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
-                let senaraiAcara = [];
+                const catAthletes = athletes.filter(a => a.jantina === gender);
+                const stats = catAthletes.map(ath => {
+                    let g=0, s=0, b=0, k=0, pts=0, bg=0, bs=0, bb=0;
+                    let senaraiAcara = [];
                 results.forEach(r => {
                     const ev = events.find(e => e.id === r.eventId);
                     if (!ev) return;
