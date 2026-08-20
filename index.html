@@ -147,8 +147,9 @@
             const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
             const [passcodeInput, setPasscodeInput] = useState("");
             const [showPointsModal, setShowPointsModal] = useState(false);
-            const [showSchoolSetupModal, setShowSchoolSetupModal] = useState(false);
+            const [tempBonusPoints, setTempBonusPoints] = useState({});
             const [showDiagModal, setShowDiagModal] = useState(false);
+            const [showSchoolSetupModal, setShowSchoolSetupModal] = useState(false);
             const [schoolSetupTab, setSchoolSetupTab] = useState("config");
             const [showSignatoryModal, setShowSignatoryModal] = useState(false);
             const [showAdminManagerModal, setShowAdminManagerModal] = useState(false);
@@ -176,7 +177,6 @@
             const [eventForm, setEventForm] = useState({ id: "", noAcara: "", nama: "", kategori: "L12TKB", jenis: "Balapan", format: "Individu", tarikh: "", masa: "" });
             const [isEventSidebarOpen, setIsEventSidebarOpen] = useState(false);
             const [isEditingEvent, setIsEditingEvent] = useState(false);
-            const [newCategoryName, setNewCategoryName] = useState("");
 
             const [houseForm, setHouseForm] = useState({ nama: "", slogan: "", guruPenasihat: "", bonusPoints: 0, warnaLabel: "Ungu" });
             const [isHouseSidebarOpen, setIsHouseSidebarOpen] = useState(false);
@@ -198,7 +198,6 @@
             const [activeRegEvent, setActiveRegEvent] = useState(null);
             const [tempRegData, setTempRegData] = useState({});
             const [regModalHouseFilter, setRegModalHouseFilter] = useState("Semua");
-            const [regModalCategoryFilter, setRegModalCategoryFilter] = useState("Semua");
             const [regModalSearchQuery, setRegModalSearchQuery] = useState("");
 
             const [gridResults, setGridResults] = useState({});
@@ -371,7 +370,6 @@
                         setTimeout(() => {
                             executeBypassPrint('sijil', ath);
                             setCertAutoOpened(true);
-                            // Clear URL without reloading
                             window.history.replaceState({}, document.title, window.location.pathname);
                         }, 1000);
                     } else {
@@ -991,7 +989,6 @@
                     const isRelay = targetData.format === "Berkumpulan";
                     
                     let tableRows = "";
-                    let refRows = "";
 
                     if (isRelay) {
                         const teams = {};
@@ -1494,7 +1491,7 @@
                     <header className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-md relative z-50">
                         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
                             <div className="flex items-center gap-3">
-                                <img src={logoUrl} alt="Logo Sekolah" className="h-24 w-24 object-contain drop-shadow-md" onError={(e) => e.target.style.display='none'} />
+                                <img src={logoUrl} alt="Logo Sekolah" className="h-24 w-24 object-contain drop-shadow-md" onerror="this.style.display='none'" />
                                 <div>
                                     <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">SPARK Online <span className="text-xl md:text-2xl font-extrabold text-indigo-300">- Transformasi Digital dalam Pengurusan Sukan</span></h1>
                                     <p className="text-xs font-semibold text-indigo-200">{activeSchoolName} ({activeYear})</p>
@@ -1510,7 +1507,13 @@
                                                 <button onClick={() => { setShowLockModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-red-50 text-xs font-semibold text-red-700">🔒 Kunci Sistem (Read-Only)</button>
                                                 <button onClick={() => { setShowDiagModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">ℹ️ Info Diag</button>
                                                 <button onClick={() => { setShowAdminManagerModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">👥 Pengurusan Admin Tambahan</button>
-                                                <button onClick={() => { setShowPointsModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">⚙️ Tetapan Kategori & Mata</button>
+                                                <button onClick={() => { 
+                                                    const initBonus = {};
+                                                    Object.keys(housesMetadata).forEach(k => initBonus[k] = housesMetadata[k].bonusPoints || 0);
+                                                    setTempBonusPoints(initBonus);
+                                                    setShowPointsModal(true); 
+                                                    setIsAdminMenuOpen(false); 
+                                                }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">⚙️ Tetapan Kategori & Mata</button>
                                                 <button onClick={() => { setShowSchoolSetupModal(true); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-xs font-semibold">🏫 Tetapan Sekolah Baharu</button>
                                                 <button onClick={() => { handleBackup(); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-emerald-50 text-xs font-semibold text-emerald-700">📥 Sandaran Data (JSON)</button>
                                                 <button onClick={() => { handleRestoreClick(); setIsAdminMenuOpen(false); }} className="w-full text-left px-5 py-2.5 hover:bg-amber-50 text-xs font-semibold text-amber-700">📤 Muat Naik Sandaran</button>
@@ -2622,20 +2625,52 @@
 
                     {showPointsModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">⚙️ Tetapan Poin Pingat</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div><label className="block mb-1">Mata Emas</label><input type="number" value={pointsConfig.emas} onChange={e=>setPointsConfig({...pointsConfig,emas:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
-                                    <div><label className="block mb-1">Mata Perak</label><input type="number" value={pointsConfig.perak} onChange={e=>setPointsConfig({...pointsConfig,perak:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
-                                    <div><label className="block mb-1">Mata Gangsa</label><input type="number" value={pointsConfig.gangsa} onChange={e=>setPointsConfig({...pointsConfig,gangsa:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
-                                    <div><label className="block mb-1">Mata Keempat</label><input type="number" value={pointsConfig.keempat} onChange={e=>setPointsConfig({...pointsConfig,keempat:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl flex flex-col max-h-[90vh]">
+                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2 shrink-0">⚙️ Tetapan Poin Pingat</h3>
+                                <div className="overflow-y-auto pr-1 space-y-4 flex-1">
+                                    <div>
+                                        <h4 className="text-slate-500 uppercase text-[10px] mb-2 font-bold">Mata Kemenangan Pingat</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div><label className="block mb-1">Mata Emas</label><input type="number" value={pointsConfig.emas} onChange={e=>setPointsConfig({...pointsConfig,emas:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
+                                            <div><label className="block mb-1">Mata Perak</label><input type="number" value={pointsConfig.perak} onChange={e=>setPointsConfig({...pointsConfig,perak:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
+                                            <div><label className="block mb-1">Mata Gangsa</label><input type="number" value={pointsConfig.gangsa} onChange={e=>setPointsConfig({...pointsConfig,gangsa:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
+                                            <div><label className="block mb-1">Mata Keempat</label><input type="number" value={pointsConfig.keempat} onChange={e=>setPointsConfig({...pointsConfig,keempat:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" /></div>
+                                        </div>
+                                    </div>
+                                    <div className="border-t pt-3">
+                                        <h4 className="text-slate-500 uppercase text-[10px] mb-2 font-bold">Mata Bonus Perbarisan / Acara Tambahan</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {Object.keys(housesMetadata).map(house => (
+                                                <div key={house}>
+                                                    <label className="block mb-1 flex items-center gap-1.5">
+                                                        <span className={`w-2.5 h-2.5 rounded-full shadow-sm ${COLOR_PRESETS[housesMetadata[house]?.warnaLabel || "Merah"]?.warna}`}></span>
+                                                        Rumah {house}
+                                                    </label>
+                                                    <input type="number" value={tempBonusPoints[house] !== undefined ? tempBonusPoints[house] : (housesMetadata[house].bonusPoints || 0)} onChange={e => setTempBonusPoints({...tempBonusPoints, [house]: parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl bg-slate-50 focus:bg-white transition outline-none focus:border-indigo-500" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex gap-3 pt-3 border-t">
-                                    <button onClick={()=>setShowPointsModal(false)} className="flex-1 py-3 bg-slate-200 rounded-xl">Batal</button>
+                                <div className="flex gap-3 pt-3 border-t shrink-0">
+                                    <button onClick={()=>setShowPointsModal(false)} className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl transition">Batal</button>
                                     <button onClick={async ()=>{
-                                        if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('points').set(pointsConfig);
-                                        setShowPointsModal(false); showToastMessage("Mata pingat dikemaskini.");
-                                    }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold">Simpan</button>
+                                        if(isCloudActive && db) {
+                                            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('points').set(pointsConfig);
+                                            const updatedHouses = { ...housesMetadata };
+                                            Object.keys(tempBonusPoints).forEach(k => {
+                                                if(updatedHouses[k]) updatedHouses[k].bonusPoints = tempBonusPoints[k];
+                                            });
+                                            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('houses').set(updatedHouses);
+                                        } else {
+                                            const updatedHouses = { ...housesMetadata };
+                                            Object.keys(tempBonusPoints).forEach(k => {
+                                                if(updatedHouses[k]) updatedHouses[k].bonusPoints = tempBonusPoints[k];
+                                            });
+                                            setHousesMetadata(updatedHouses);
+                                        }
+                                        setShowPointsModal(false); showToastMessage("Mata pingat & bonus dikemaskini.");
+                                    }} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md transition">Simpan</button>
                                 </div>
                             </div>
                         </div>
