@@ -371,6 +371,7 @@
                         setTimeout(() => {
                             executeBypassPrint('sijil', ath);
                             setCertAutoOpened(true);
+                            // Clear URL without reloading
                             window.history.replaceState({}, document.title, window.location.pathname);
                         }, 1000);
                     } else {
@@ -1484,7 +1485,6 @@
                 <div className="min-h-screen flex flex-col bg-slate-50">
                     <input type="file" ref={fileInputRef} onChange={handleRestoreBackup} accept=".json" className="hidden" />
                     
-                    {}
                     {isSystemLocked && (
                         <div className="bg-red-600 text-white text-center py-1.5 px-4 text-[11px] font-bold tracking-widest uppercase shadow-md sticky top-0 z-[100]">
                             ⚠️ Sistem Telah Dikunci (Mod Baca Sahaja)
@@ -1534,7 +1534,6 @@
                         </div>
                     </header>
 
-                    {}
                     <nav className="bg-white border-b sticky top-0 z-40 shadow-sm">
                         <div className="max-w-7xl mx-auto px-4 py-2 flex overflow-x-auto space-x-2">
                             {TABS.map(tab => (
@@ -1546,7 +1545,6 @@
                     </nav>
 
                     <main className="max-w-7xl mx-auto p-4 w-full flex-grow">
-                        {}
                         {activeTab === "dashboard" && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1639,7 +1637,6 @@
                             </div>
                         )}
 
-                        {}
                         {activeTab === "rumah_sukan" && userRole !== "pelawat" && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="bg-white p-4 border rounded-2xl flex justify-between items-center shadow-sm">
@@ -1701,7 +1698,6 @@
                             </div>
                         )}
 
-                        {}
                         {activeTab === "acara" && userRole !== "pelawat" && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="bg-white p-4 border rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
@@ -1778,7 +1774,6 @@
                             </div>
                         )}
 
-                        {}
                         {activeTab === "atlit" && userRole !== "pelawat" && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="bg-white p-4 border rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-4 shadow-sm">
@@ -1863,7 +1858,6 @@
                             </div>
                         )}
 
-                        {}
                         {activeTab === "keputusan" && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="bg-white p-5 border rounded-2xl flex flex-wrap justify-between items-end gap-4 shadow-sm">
@@ -2151,7 +2145,6 @@
                             </div>
                         )}
 
-                        {}
                         {activeTab === "pasca_sukan" && userRole !== "pelawat" && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="bg-white p-6 border rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -2209,7 +2202,6 @@
                             </div>
                         )}
 
-                        {}
                         {activeTab === "ramalan" && userRole === "admin" && predictions && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="bg-gradient-to-r from-purple-800 to-indigo-900 text-white p-6 border rounded-2xl shadow-lg relative overflow-hidden">
@@ -2240,7 +2232,6 @@
                         )}
                     </main>
 
-                    {}
                     {isBulkModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[10000] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in text-xs font-semibold">
                             <div className="bg-white rounded-2xl w-full max-w-xl p-6 space-y-4 shadow-2xl flex flex-col">
@@ -2270,7 +2261,6 @@
                         </div>
                     )}
 
-                    {}
                     {isLoginModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/75 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl w-full max-w-sm p-8 space-y-5 shadow-2xl">
@@ -2296,7 +2286,6 @@
                         </div>
                     )}
 
-                    {}
                     {showLockModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-xs font-semibold space-y-4 shadow-2xl">
@@ -2323,7 +2312,6 @@
                         </div>
                     )}
 
-                    {}
                     {isHouseSidebarOpen && (
                         <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
                             <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsHouseSidebarOpen(false)}></div>
@@ -2339,7 +2327,6 @@
                         </div>
                     )}
 
-                    {}
                     {showMembersModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 text-xs font-semibold backdrop-blur-sm">
                             <div className="bg-white rounded-2xl w-full max-w-4xl flex flex-col h-[85vh] shadow-2xl overflow-hidden animate-fade-in">
@@ -2413,7 +2400,6 @@
                         </div>
                     )}
 
-                    {}
                     {isEventSidebarOpen && (
                         <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
                             <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsEventSidebarOpen(false)}></div>
@@ -2439,7 +2425,6 @@
                         </div>
                     )}
 
-                    {}
                     {isAddAthleteSidebarOpen && (
                         <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
                             <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsAddAthleteSidebarOpen(false)}></div>
@@ -2462,7 +2447,6 @@
                         </div>
                     )}
 
-                    {}
                     {isAssignEventSidebarOpen && (
                         <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
                             <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsAssignEventSidebarOpen(false)}></div>
@@ -2543,7 +2527,6 @@
                         </div>
                     )}
 
-                    {}
                     {isEventRegModalOpen && activeRegEvent && (
                         <div className="fixed inset-0 z-[9999] flex justify-end text-xs">
                             <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={()=>setIsEventRegModalOpen(false)}></div>
@@ -2593,7 +2576,6 @@
                         </div>
                     )}
 
-                    {}
                     {showRecordForm && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-xs font-semibold space-y-4 shadow-2xl">
@@ -2612,7 +2594,6 @@
                         </div>
                     )}
 
-                    {}
                     {showSignatoryModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl p-8 w-full max-w-2xl text-xs font-semibold space-y-4 shadow-2xl">
@@ -2639,53 +2620,104 @@
                         </div>
                     )}
 
-                    {}
                     {showPointsModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">⚙️ Tetapan Poin</h3>
+                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">⚙️ Tetapan Poin Pingat</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div><label className="block mb-1">Mata Emas</label><input type="number" value={pointsConfig.emas} onChange={e=>setPointsConfig({...pointsConfig,emas:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
                                     <div><label className="block mb-1">Mata Perak</label><input type="number" value={pointsConfig.perak} onChange={e=>setPointsConfig({...pointsConfig,perak:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
+                                    <div><label className="block mb-1">Mata Gangsa</label><input type="number" value={pointsConfig.gangsa} onChange={e=>setPointsConfig({...pointsConfig,gangsa:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
+                                    <div><label className="block mb-1">Mata Keempat</label><input type="number" value={pointsConfig.keempat} onChange={e=>setPointsConfig({...pointsConfig,keempat:parseInt(e.target.value)||0})} className="w-full border p-2 rounded-xl" /></div>
                                 </div>
                                 <div className="flex gap-3 pt-3 border-t">
-                                    <button onClick={()=>setShowPointsModal(false)} className="flex-1 py-3 bg-slate-200 rounded-xl">Tutup</button>
+                                    <button onClick={()=>setShowPointsModal(false)} className="flex-1 py-3 bg-slate-200 rounded-xl">Batal</button>
+                                    <button onClick={async ()=>{
+                                        if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('points').set(pointsConfig);
+                                        setShowPointsModal(false); showToastMessage("Mata pingat dikemaskini.");
+                                    }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold">Simpan</button>
                                 </div>
                             </div>
                         </div>
                     )}
-                    
-                    {}
+
                     {showSchoolSetupModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl w-full max-w-xl text-xs font-semibold p-6 space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">🏫 Tetapan Sekolah</h3>
-                                <button onClick={()=>setShowSchoolSetupModal(false)} className="px-6 py-2.5 bg-slate-200 font-bold rounded-xl">Tutup</button>
+                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">🏫 Profil & Tetapan Sekolah</h3>
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const form = e.target;
+                                    localStorage.setItem('sps_school_name', form.schoolName.value);
+                                    localStorage.setItem('sps_school_subtitle', form.schoolSubtitle.value);
+                                    localStorage.setItem('sps_school_logo', form.logoUrl.value);
+                                    localStorage.setItem('sps_active_year', form.activeYear.value);
+                                    if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('config').set({activeYear: form.activeYear.value}, {merge: true});
+                                    setShowSchoolSetupModal(false);
+                                    window.location.reload();
+                                }} className="space-y-3">
+                                    <div><label className="block mb-1">Nama Sekolah</label><input required name="schoolName" defaultValue={activeSchoolName} className="w-full border p-2 rounded-xl uppercase font-bold" /></div>
+                                    <div><label className="block mb-1">Subtajuk / Keterangan Kejohanan</label><input required name="schoolSubtitle" defaultValue={activeSchoolSubtitle} className="w-full border p-2 rounded-xl font-bold" /></div>
+                                    <div><label className="block mb-1">Pautan Imej Lencana / Logo Sekolah (URL)</label><input required name="logoUrl" defaultValue={logoUrl} className="w-full border p-2 rounded-xl" /></div>
+                                    <div><label className="block mb-1">Tahun Aktif Kejohanan</label><input required name="activeYear" defaultValue={activeYear} type="number" className="w-full border p-2 rounded-xl font-bold" /></div>
+                                    <div className="flex gap-2 pt-3">
+                                        <button type="button" onClick={()=>setShowSchoolSetupModal(false)} className="flex-1 px-6 py-2.5 bg-slate-200 hover:bg-slate-300 font-bold rounded-xl transition">Batal</button>
+                                        <button type="submit" className="flex-1 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition">Simpan & Muat Semula</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     )}
 
-                    {}
                     {showAdminManagerModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">👥 Pengurusan Admin</h3>
-                                <button onClick={() => setShowAdminManagerModal(false)} className="px-6 py-2.5 bg-slate-200 rounded-xl font-bold">Tutup</button>
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-md text-xs font-semibold space-y-4 shadow-2xl flex flex-col max-h-[80vh]">
+                                <h3 className="font-black text-sm uppercase text-slate-900 border-b pb-2">👥 Pengurusan Emel Admin</h3>
+                                <div className="flex gap-2">
+                                    <input type="email" value={newAdminEmail} onChange={e=>setNewAdminEmail(e.target.value)} placeholder="Emel Admin Baru..." className="flex-1 border p-2.5 rounded-xl bg-slate-50 outline-none focus:border-indigo-500 font-bold" />
+                                    <button onClick={async () => {
+                                        if(!newAdminEmail) return;
+                                        const updated = [...adminList, newAdminEmail.toLowerCase()];
+                                        if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({list: updated});
+                                        setNewAdminEmail(""); showToastMessage("Admin ditambah");
+                                    }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm">Tambah</button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto space-y-2 border-t pt-2">
+                                    {adminList.map(email => (
+                                        <div key={email} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border shadow-sm">
+                                            <span className="font-bold text-slate-700">{email}</span>
+                                            <button onClick={async () => {
+                                                const updated = adminList.filter(e => e !== email);
+                                                if(isCloudActive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('metadata').doc('admins').set({list: updated});
+                                                else setAdminList(updated);
+                                                showToastMessage("Admin dibuang");
+                                            }} className="text-red-500 hover:scale-110 font-bold transition">✕</button>
+                                        </div>
+                                    ))}
+                                    {adminList.length === 0 && <p className="text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl">Tiada admin tambahan direkodkan.</p>}
+                                </div>
+                                <button onClick={() => setShowAdminManagerModal(false)} className="w-full py-2.5 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold mt-2 transition">Tutup</button>
                             </div>
                         </div>
                     )}
 
-                    {}
                     {showDiagModal && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl p-6 max-w-md w-full text-xs font-semibold space-y-4 shadow-2xl">
-                                <h3 className="text-sm font-black text-slate-900 uppercase border-b pb-2">ℹ️ Diagnostik</h3>
-                                <button onClick={() => setShowDiagModal(false)} className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-bold">Tutup</button>
+                                <h3 className="text-sm font-black text-slate-900 uppercase border-b pb-2">ℹ️ Diagnostik & Status Sistem</h3>
+                                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border">
+                                    <p className="flex justify-between border-b pb-1">Status Awan (Firebase): <span className={isCloudActive ? "text-emerald-600 font-bold" : "text-red-600 font-bold"}>{isCloudActive ? "Disambungkan 🟢" : "Tidak Aktif 🔴"}</span></p>
+                                    <p className="flex justify-between border-b pb-1">Kunci Pangkalan Data: <span className="font-mono text-indigo-600">{appId}</span></p>
+                                    <p className="flex justify-between border-b pb-1">Peranan Log Masuk: <span className="font-bold uppercase text-indigo-600">{userRole}</span></p>
+                                    <p className="flex justify-between border-b pb-1">Jumlah Data Atlet: <span className="font-bold">{athletes.length} Murid</span></p>
+                                    <p className="flex justify-between border-b pb-1">Jumlah Rekod Acara: <span className="font-bold">{events.length} Acara</span></p>
+                                    <p className="flex justify-between border-b pb-1">Jumlah Keputusan Dicatat: <span className="font-bold">{results.length} Log</span></p>
+                                </div>
+                                <button onClick={() => setShowDiagModal(false)} className="w-full px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition shadow-md">Tutup Tetingkap</button>
                             </div>
                         </div>
                     )}
 
-                    {}
                     {confirmModal.show && (
                         <div className="fixed inset-0 bg-slate-900/60 z-[10001] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-xs space-y-4 shadow-2xl">
@@ -2699,7 +2731,6 @@
                         </div>
                     )}
 
-                    {}
                     {isPreviewModalOpen && (
                         <div className="fixed inset-0 bg-slate-900/80 z-[10000] flex flex-col p-4 backdrop-blur-sm animate-fade-in">
                             <div className="bg-slate-100 rounded-2xl shadow-2xl flex flex-col flex-1 max-w-5xl w-full mx-auto overflow-hidden border border-slate-300">
@@ -2728,7 +2759,6 @@
                         </div>
                     )}
 
-                    {}
                     {toast.show && (
                         <div className="fixed bottom-6 right-6 z-[10001] bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-3 animate-slide-up">
                             {toast.type === "error" ? "⚠️" : "✅"}
