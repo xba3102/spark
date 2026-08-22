@@ -1574,7 +1574,10 @@
                         </div>
                     </nav>
 
-                    <main className="max-w-7xl mx-auto p-4 w-full flex-grow">
+                    <main className="max-w-7xl mx-auto p-4 md:p-6 w-full flex-grow relative">
+                        {/* Background Glow effect */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+
                         {activeTab === "dashboard" && (
                             <div className="space-y-6 animate-fade-in">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
